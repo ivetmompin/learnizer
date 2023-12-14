@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "646395989824",
+    "project_id": "learnizer-1b9e1",
+    "storage_bucket": "learnizer-1b9e1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:646395989824:android:bb9f70e08e989fd213b4a5",
+        "android_client_info": {
+          "package_name": "com.example.learnizer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCNJmZ3nAbngMtWk44zWWR2fsdjEqts2sU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
