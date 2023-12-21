@@ -1,30 +1,32 @@
 
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'directory_model.dart';
 
 class UserModel{
-  final String name;
+  final String email;
   final List<DirectoryModel> directories;
-  final String image;
+  final String profileImage;
+  final String appTheme;
 
   UserModel({
-    required this.name,
-    required this.owner,
-    required this.description,
-    required this.image,
+    required this.email,
+    required this.directories,
+    required this.profileImage,
+    required this.appTheme
   });
 
   toJson(){
-    return{"Name": name, "Owner": owner, "Description": description, "Image": image};
+    return{"Email": email, "Directories": directories, "ProfileImage": profileImage, "AppTheme": appTheme};
   }
 
-  factory RecipeModel.fromSnapshot(DocumentSnapshot<Map<String, dynamic>> document){
+  factory UserModel.fromSnapshot(DocumentSnapshot<Map<String, dynamic>> document){
     final data = document.data();
-    return RecipeModel(
-        name: data?["Name"],
-        owner: data?["Owner"],
-        description: data?["Description"],
-        image: data?["Image"]
+    return UserModel(
+        email: data?["Email"],
+        directories: data?["Directories"],
+        profileImage: data?["ProfileImage"],
+        appTheme: data?["AppTheme"]
     );
   }
 }

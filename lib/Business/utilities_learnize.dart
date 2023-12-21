@@ -1,0 +1,68 @@
+
+import 'dart:io';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+
+class UtilitiesLearnizer {
+
+  Future _pickImageFromGalleryOrCamera(String source) async {
+    XFile? returnedImage;
+    ImagePicker imagePicker = ImagePicker();if(source=="gallery") {
+      returnedImage = await imagePicker.pickImage(
+          source: ImageSource.gallery);
+    }else if(source=="camera"){
+      returnedImage = await imagePicker.pickImage(
+          source: ImageSource.camera);
+    }
+    print('${returnedImage?.path}');
+
+    if(returnedImage==null) return;
+
+    String uniqueFileName=DateTime.now().microsecondsSinceEpoch.toString();
+
+    Reference referenceRoot = FirebaseStorage.instance.ref();
+    Reference referenceDirImages = referenceRoot.child('images');
+    Reference referenceImageToUpload = referenceDirImages.child(uniqueFileName);
+    try{
+      await referenceImageToUpload.putFile(File(returnedImage!.path));
+      return await referenceImageToUpload.getDownloadURL();
+    }catch(error){
+      //some error
+    }
+  }
+
+  Future<String> getTheme(String file) async {
+    String url='';
+    try {
+      Reference ref = FirebaseStorage.instance.ref().child('Themes/$file');
+      url = await ref.getDownloadURL();
+      print("value of url: "+url);
+    } catch (e) {
+      // Handle errors (e.g., file not found)
+      print('Error getting image URL: $e');
+    }
+    return url;
+  }
+
+  MaterialColor returnColorByTheme(String theme){
+    switch(theme){
+      case "green": return Colors.green;
+      case "purple_orange": return Colors.deepPurple;
+      case "yellow_orange": return Colors.orange;
+      default: return Colors.blue;
+    }
+  }
+
+
+  List<Color> getCorrectColors(String selectedTheme) {
+    switch(selectedTheme) {
+      case "pink": return [ Color(0x66c64b8c), Color(0x99c64b8c), Color(0xccc64b8c), Color(0xFFc64b8c)];
+      case "purple": return [ Color(0x6657026f), Color(0x9957026f), Color(0xcc57026f), Color(0xFF57026f)];
+      case "green": return [Color(0x663bb143), Color(0x993bb143), Color(0xcc3bb143), Color(0xFF3bb143)];
+      case "yellow": return [Color(0x66ffbf00), Color(0x99ffbf00), Color(0xccffbf00), Color(0xFFffbf00)];
+      case "orange": return [Color(0x66ff5f00), Color(0x99ff5f00), Color(0xccff5f00), Color(0xFFff5f00)];
+      default: return [Color(0x666CCBCA), Color(0x996CCBCA), Color(0xcc6CCBCA), Color(0xFF6CCBCA)];
+    }
+  }
+}

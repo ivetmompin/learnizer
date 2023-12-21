@@ -2,28 +2,28 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class DirectoryModel{
+class TaskModel{
 
-  final List<TaskModel> tasks;
+  final String name;
+  final String description;
+  final List<String> attachments;
 
-  DirectoryModel({
+  TaskModel({
     required this.name,
-    required this.owner,
     required this.description,
-    required this.image,
+    required this.attachments,
   });
 
   toJson(){
-    return{"Name": name, "Owner": owner, "Description": description, "Image": image};
+    return{"Name": name, "Description": description, "Attachments": attachments};
   }
 
-  factory DirectoryModel.fromSnapshot(DocumentSnapshot<Map<String, dynamic>> document){
+  factory TaskModel.fromSnapshot(DocumentSnapshot<Map<String, dynamic>> document){
     final data = document.data();
-    return DirectoryModel(
+    return TaskModel(
         name: data?["Name"],
-        owner: data?["Owner"],
         description: data?["Description"],
-        image: data?["Image"]
+        attachments: data?["Attachments"]
     );
   }
 }
