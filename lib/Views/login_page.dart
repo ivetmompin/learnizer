@@ -1,9 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnizer/Business/utilities_learnize.dart';
 import 'package:learnizer/Views/sign_up.dart';
 import 'package:learnizer/Views/user_menu.dart';
+
+import '../Models/user_model.dart';
 
 
 class LoginPage extends StatefulWidget {
@@ -14,6 +17,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage>{
+  final _database = FirebaseFirestore.instance;
   final double coverHeight = 210;
   final double profileHeight = 144;
   UtilitiesLearnizer utilities = UtilitiesLearnizer();
@@ -57,53 +61,53 @@ class _LoginPageState extends State<LoginPage>{
                 alignment: Alignment.center,
                 children: [
                   Container(
-                    height: double.infinity,
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Color(0x666CCBCA),
-                          Color(0x996CCBCA),
-                          Color(0xcc6CCBCA),
-                          Color(0xFF6CCBCA),
-                        ]
-                      )
-                    ),
-                    child:SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 25,
-                        vertical: 120
+                      height: double.infinity,
+                      width: double.infinity,
+                      decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Color(0x666CCBCA),
+                                Color(0x996CCBCA),
+                                Color(0xcc6CCBCA),
+                                Color(0xFF6CCBCA),
+                              ]
+                          )
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          buildLogoImage(),
-                          const SizedBox(height: 30),
-                        const Text(
-                          'Sign In',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 40,
-                            fontWeight: FontWeight.bold,
+                      child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 25,
+                              vertical: 120
                           ),
-                        ),
-                        const SizedBox(height: 50),
-                        buildEmail(myControllerEmail),
-                          const SizedBox(height: 20),
-                          buildPassword(myControllerPassword),
-                          buildNoAccountButton(),
-                          if (errorMessage != null)
-                            Text(
-                              errorMessage!,
-                              style: TextStyle(color: Colors.red),
-                            ),
-                          buildLogInBtn(),
-                      ],
-                    )
-                  )
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              buildLogoImage(),
+                              const SizedBox(height: 30),
+                              const Text(
+                                'Sign In',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 50),
+                              buildEmail(myControllerEmail),
+                              const SizedBox(height: 20),
+                              buildPassword(myControllerPassword),
+                              buildNoAccountButton(),
+                              if (errorMessage != null)
+                                Text(
+                                  errorMessage!,
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              buildLogInBtn(),
+                            ],
+                          )
+                      )
                   )
                 ],
               );
@@ -113,20 +117,19 @@ class _LoginPageState extends State<LoginPage>{
     );
   }
 
-  buildLogoImage(){
-    getThemeFromUtilities("learnizer.png");
+  buildLogoImage() {
     return CircleAvatar(
-      radius: profileHeight/1.8,
+      radius: profileHeight / 1.8,
       backgroundColor: Colors.transparent,
-      child:CircleAvatar(
-        radius: profileHeight/2, // Adjust the radius as needed
-        backgroundColor: Colors.transparent, // Border color// Make sure the background is transparent
+      child: CircleAvatar(
+        radius: profileHeight / 2,
+        backgroundColor: Colors.transparent,
         child: ClipOval(
           child: Image.network(
-            imageUrlLogo,
-            width: profileHeight, // Adjust the width as needed
-            height: profileHeight, // Adjust the height as needed
-            fit: BoxFit.cover, // Make sure the image covers the circular boundary
+            imageUrlLogo, // Replace 'assets/learnizer.png' with the correct path
+            width: profileHeight,
+            height: profileHeight,
+            fit: BoxFit.cover,
           ),
         ),
       ),
@@ -314,13 +317,20 @@ class _LoginPageState extends State<LoginPage>{
           email: email,
           password: password
       );
+      QuerySnapshot snapshot = await _database.collection("userDatabase").where("Email", isEqualTo: email).get();
+      // Check if there's a document with the given name
+      if (snapshot.docs.isNotEmpty) {
+        DocumentSnapshot documentSnapshot = snapshot.docs.first;
+        UserModel userModel = UserModel.fromSnapshot(documentSnapshot as DocumentSnapshot<Map<String, dynamic>>);
+        // Now you can use the 'user' object
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => UserMenuPage(),
-        ),
-      );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => UserMenuPage(user: userModel),
+          ),
+        );
+      }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'wrong-password') {
         setState(() {

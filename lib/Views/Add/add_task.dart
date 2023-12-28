@@ -1,28 +1,39 @@
+import 'dart:js_util';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnizer/Business/utilities_learnize.dart';
+import 'package:learnizer/Models/directory_model.dart';
 import 'package:learnizer/Views/theme_selection.dart';
 
+import '../../Models/task_model.dart';
+import '../../Models/user_model.dart';
 
-class SignUpPage extends StatefulWidget {
-  const SignUpPage({super.key});
+
+class AddTaskPage extends StatefulWidget {
+  final UserModel user;
+  final int? directory;
+  const AddTaskPage({required this.user, this.directory, Key? key}) : super(key: key);
 
   @override
-  State<SignUpPage> createState() => _SignUpPageState();
+  State<AddTaskPage> createState() => _AddTaskPageState();
 }
 
-class _SignUpPageState extends State<SignUpPage>{
+class _AddTaskPageState extends State<AddTaskPage>{
+  final _database = FirebaseFirestore.instance;
   final double coverHeight = 210;
   final double profileHeight = 144;
+  late final _user = widget.user;
+  late final _directory = widget.directory;
   UtilitiesLearnizer utilities = UtilitiesLearnizer();
   String imageUrlLogo='';
   String imageUrlCover='';
   String? errorMessage;
-  final RegExp emailRegex = RegExp(
-      r'^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$');
-  final myControllerEmail = TextEditingController();
-  final myControllerPassword = TextEditingController();
-  final myControllerConfirmation = TextEditingController();
+  final myControllerName = TextEditingController();
+  final myControllerDeadline = TextEditingController();
+  final myControllerDescription = TextEditingController();
+  final myControllerDirectory = TextEditingController();
   // This widget is the root of your application.
   Future<String> getThemeFromUtilities(String file, String caseImg) async {
     String imageUrl = await utilities.getTheme(file);
@@ -62,16 +73,11 @@ class _SignUpPageState extends State<SignUpPage>{
                   Container(
                       height: double.infinity,
                       width: double.infinity,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                           gradient: LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
-                              colors: [
-                                Color(0x666CCBCA),
-                                Color(0x996CCBCA),
-                                Color(0xcc6CCBCA),
-                                Color(0xFF6CCBCA),
-                              ]
+                              colors: utilities.getCorrectColors(_user.theme)
                           )
                       ),
                       child: SingleChildScrollView(
@@ -94,18 +100,16 @@ class _SignUpPageState extends State<SignUpPage>{
                                 ),
                               ),
                               const SizedBox(height: 30),
-                              buildEmail(myControllerEmail),
+                              utilities.buildTextField(myControllerName, _user.theme, "Name", Icons.edit),
                               const SizedBox(height: 20),
-                              buildPassword(myControllerPassword),
+                              utilities.buildTextField(myControllerDescription,_user.theme,"Description",Icons.person),
                               const SizedBox(height: 20),
-                              buildPasswordConfirmation(
-                                  myControllerConfirmation),
+                              utilities.buildTextField(myControllerDeadline, _user.theme, "Deadline", Icons.timer),
                               if (errorMessage != null)
                                 Text(
                                   errorMessage!,
                                   style: TextStyle(color: Colors.red),
                                 ),
-                              buildSignUpBtn(),
                             ],
                           )
                       )
@@ -291,30 +295,17 @@ class _SignUpPageState extends State<SignUpPage>{
     );
   }
 
-  buildSignUpBtn(){
+  buildAddTaskBtn(){
     return Container(
         padding: const EdgeInsets.symmetric(vertical: 25),
         child: SizedBox(
           width: double.infinity,
           child: OutlinedButton(
             onPressed: () {
-              if (!emailRegex.hasMatch(myControllerEmail.text)) {
-                setState(() {
-                  errorMessage = 'Please provide a valid email';
-                });
-              } else
-              if (myControllerPassword.text != myControllerConfirmation.text) {
-                setState(() {
-                  errorMessage = 'Passwords do not match';
-                });
-              } else {
-                setState(() {
-                  errorMessage = null;
-                });
-              }
               // All fields are valid
-              _signUpUser(myControllerEmail, myControllerPassword,
-                  myControllerConfirmation, context);
+              _addTask(myControllerName, myControllerDescription,
+                  myControllerDeadline, context);
+
             },
             style: OutlinedButton.styleFrom(
               // Customize the button style here
@@ -332,26 +323,24 @@ class _SignUpPageState extends State<SignUpPage>{
     );
   }
 
-  _signUpUser(TextEditingController myControllerEmail, TextEditingController myControllerPassword, TextEditingController myControllerConfirmation, context) async {
-    final String email = myControllerEmail.text.trim();
-    final String password = myControllerPassword.text.trim();
+  _addTask(TextEditingController myControllerName, TextEditingController myControllerDescription, TextEditingController myControllerDeadline, context) async {
+    final String name = myControllerName.text.trim();
+    final String description = myControllerDescription.text.trim();
+    final String deadline = myControllerDeadline.text.trim();
+    final DateTime deadlineDate = DateTime.parse(deadline);
 
     if (errorMessage == null) {
       try {
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: email,
-          password: password,
-        );
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: email,
-          password: password,
-        );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ThemeSelectionPage(userEmail: email),
-          ),
-        );
+        TaskModel task = TaskModel(name: name, description: description, deadline: deadlineDate,attachments: []);
+        DirectoryModel directoryToEdit;
+        if(_directory!=null) {
+           directoryToEdit = _user.directories.elementAt(_directory);
+        }else {
+           directoryToEdit = _user.directories.where((directory) => directory.name == myControllerDirectory.text);
+        }
+        directoryToEdit.tasks.add(task);
+        _user.directories.removeWhere((directory) => directoryToEdit.name == name);
+        _user.directories.add(directoryToEdit);
       } on FirebaseAuthException catch (e) {
         if (e.code == 'weak-password') {
           setState(() {
@@ -368,10 +357,33 @@ class _SignUpPageState extends State<SignUpPage>{
         });
       }
     }
-    myControllerEmail.clear();
-    myControllerPassword.clear();
-    myControllerConfirmation.clear();
+    myControllerDirectory.clear();
+    myControllerName.clear();
+    myControllerDeadline.clear();
+    myControllerDescription.clear();
   }
+
+    deleteUser(String name) async {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection("userDatabase")
+          .where("Name", isEqualTo: _user.name)
+          .get();
+
+      // Check if there's a document with the given name
+      if (querySnapshot.docs.isNotEmpty) {
+        // Get the first document in the result (assuming there's only one match)
+        DocumentSnapshot documentSnapshot = querySnapshot.docs.first;
+        // Delete the document by its ID
+        await FirebaseFirestore.instance.collection("userDatabase").doc(
+            documentSnapshot.id).delete();
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ViewDirectoryPage(userEmail: _user.email),
+          ),
+        );
+      }
+    }
 
 }
 

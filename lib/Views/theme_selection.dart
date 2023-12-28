@@ -2,7 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:learnizer/Business/utilities_learnize.dart';
-import 'package:learnizer/Models/theme_model.dart';
+import 'package:learnizer/Models/directory_model.dart';
+import 'package:learnizer/Models/user_model.dart';
 import 'package:learnizer/Views/user_menu.dart';
 
 
@@ -17,24 +18,20 @@ class _ThemeSelectionPageState extends State<ThemeSelectionPage> {
   late String userEmail;
   final _database = FirebaseFirestore.instance;
   final double coverHeight = 210;
-  final double profileHeight = 144;
+  final double profileHeight = 124;
   UtilitiesLearnizer utilities = UtilitiesLearnizer();
+  final myUsernameController = TextEditingController();
+  String imageUrlUser='';
   String imageUrlLogo='';
   String selectedTheme='';
   String? errorMessage;
   // This widget is the root of your application.
-  Future<String> getThemeFromUtilities(String file) async {
-    String imageUrl = await utilities.getTheme(file);
-    imageUrlLogo = imageUrl;
-    return imageUrl;
-  }
 
   @override
   void initState() {
     super.initState();
     userEmail = widget.userEmail;
     // Fetch image URLs when the widget is initialized
-    getThemeFromUtilities("learnizer.png");
   }
 
   @override
@@ -47,67 +44,92 @@ class _ThemeSelectionPageState extends State<ThemeSelectionPage> {
         body: FutureBuilder(
           // Use FutureBuilder to wait for the image URLs
           future: Future.wait([
-            getThemeFromUtilities("learnizer.png"),
           ]),
           builder: (context, snapshot) {
-            // Render the UI once the image URLs are fetched
-            return Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.center,
-              children: [
-                Container(
-                    height: double.infinity,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                        gradient: LinearGradient(
+              // Render the UI once the image URLs are fetched
+              return Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                      height: double.infinity,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                          gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: utilities.getCorrectColors(selectedTheme),
-                        )
-                    ),
-                    child:SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 25,
-                            vertical: 120
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            buildLogoImage(),
-                            const SizedBox(height: 30),
-                            const Text(
-                              'Select Your Theme Color',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 30,
-                                fontWeight: FontWeight.bold,
+                          )
+                      ),
+                      child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 25,
+                              vertical: 120
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              buildUserImage(),
+                              const SizedBox(height: 30),
+                              buildUsername(myUsernameController),
+                              const SizedBox(height: 30),
+                              const Text(
+                                'Select Your Theme Color',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 50),
-                            buildColorsContainer(),
-                            const SizedBox(height: 20),
-                            buildSelectBtn(),
-                            if (errorMessage != null)
-                              Text(
-                                errorMessage!,
-                                style: TextStyle(color: Colors.red),
-                              ),
-                           // buildLogInBtn(),
-                          ],
-                        )
-                    )
-                )
-              ],
-            );
-          },
+                              const SizedBox(height: 10),
+                              buildColorsContainer(),
+                              const SizedBox(height: 20),
+                              buildSelectBtn(),
+                              if (errorMessage != null)
+                                Text(
+                                  errorMessage!,
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              // buildLogInBtn(),
+                            ],
+                          )
+                      )
+                  )
+                ],
+              );
+            },
         ),
       ),
     );
   }
 
-  buildLogoImage(){
-    getThemeFromUtilities("learnizer.png");
+  Future<String> getThemeFromUtilities(String file) async {
+    String imageUrl = await utilities.getTheme(file);
+    imageUrlLogo = imageUrl;
+    return imageUrl;
+  }
+
+  buildLogoImage() {
+    return CircleAvatar(
+      radius: profileHeight / 1.8,
+      backgroundColor: Colors.transparent,
+      child: CircleAvatar(
+        radius: profileHeight / 2,
+        backgroundColor: Colors.transparent,
+        child: ClipOval(
+          child: Image.network(
+            imageUrlLogo, // Replace 'assets/learnizer.png' with the correct path
+            width: profileHeight,
+            height: profileHeight,
+            fit: BoxFit.cover,
+          ),
+        ),
+      ),
+    );
+  }
+
+  buildUserImage(){
     return CircleAvatar(
       radius: profileHeight/1.8,
       backgroundColor: Colors.transparent,
@@ -115,23 +137,31 @@ class _ThemeSelectionPageState extends State<ThemeSelectionPage> {
         radius: profileHeight/2, // Adjust the radius as needed
         backgroundColor: Colors.transparent, // Border color// Make sure the background is transparent
         child: ClipOval(
-          child: Image.network(
-            imageUrlLogo,
-            width: profileHeight, // Adjust the width as needed
-            height: profileHeight, // Adjust the height as needed
-            fit: BoxFit.cover, // Make sure the image covers the circular boundary
+          child: ColoredBox(
+            color: Colors.white,
+            child: SizedBox(
+                width: profileHeight, // Adjust the width as needed
+                height: profileHeight,
+                child: IconButton(
+                  icon: const Icon(CupertinoIcons.camera),
+                  color: utilities.returnColorByTheme(selectedTheme),
+                  onPressed: () {
+                    utilities.pickImageFromGalleryOrCamera("camera");
+                  },
+                )
+            ),
           ),
         ),
       ),
     );
   }
 
-  buildEmail(TextEditingController controller){
+  buildUsername(TextEditingController controller){
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Email',
+          'Username',
           style: TextStyle(
               color: Colors.white,
               fontSize: 16,
@@ -155,69 +185,17 @@ class _ThemeSelectionPageState extends State<ThemeSelectionPage> {
             height: 60,
             child: TextField(
               controller: controller,
-              keyboardType: TextInputType.emailAddress,
               style: const TextStyle(
                   color: Colors.black87
               ),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.only(top: 14),
                   prefixIcon: Icon(
-                      Icons.email,
-                      color: Color(0xFF6CCBCA)
+                      Icons.person,
+                      color: utilities.returnColorByTheme(selectedTheme)
                   ),
-                  hintText: 'Email',
-                  hintStyle: TextStyle(
-                      color: Colors.black38
-                  )
-              ),
-            )
-        )
-      ],
-    );
-  }
-
-  buildPassword(TextEditingController controller){
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Password',
-          style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold
-          ),
-        ),
-        const SizedBox(height: 10),
-        Container(
-            alignment: Alignment.centerLeft,
-            decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius:  BorderRadius.circular(10),
-                boxShadow: const [
-                  BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 6,
-                      offset: Offset(0,2)
-                  )
-                ]
-            ),
-            height: 60,
-            child: TextField(
-              controller: controller,
-              obscureText: true,
-              style: const TextStyle(
-                  color: Colors.black87
-              ),
-              decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.only(top: 14),
-                  prefixIcon: Icon(
-                      Icons.lock,
-                      color: Color(0xFF6CCBCA)
-                  ),
-                  hintText: 'Password',
+                  hintText: 'Username',
                   hintStyle: TextStyle(
                       color: Colors.black38
                   )
@@ -234,12 +212,12 @@ class _ThemeSelectionPageState extends State<ThemeSelectionPage> {
         child: SizedBox(
           width: double.infinity,
           child: OutlinedButton(
-            onPressed: () {
-            _saveTheme(selectedTheme, context);
+            onPressed: () async {
+            UserModel user = await _saveUser(imageUrlUser,myUsernameController,selectedTheme,context);
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const UserMenuPage(),
+                builder: (context) => UserMenuPage(user: user),
               ),
             );
             },
@@ -259,28 +237,34 @@ class _ThemeSelectionPageState extends State<ThemeSelectionPage> {
     );
   }
 
-  _saveTheme(String theme, context) async {
+  Future<UserModel> _saveUser(String imageUrlUser, TextEditingController myNameController, String theme, context) async {
     try {
-
-      ThemeModel themeModel = ThemeModel(email: userEmail, theme: selectedTheme);
-      await _database.collection("Themes").add(themeModel.toJson());
+      if(imageUrlUser.isEmpty){
+        imageUrlUser=await utilities.getTheme("profile.png");
+      }
+      String name = myNameController.text.trim();
+      List<DirectoryModel> directories = [];
+      UserModel userModel = UserModel(email: userEmail, name: name, directories: directories, profileImage: imageUrlUser, theme: selectedTheme);
+      await _database.collection("userDatabase").add(userModel.toJson());
 
       // Clear text fields after successful addition
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Recipe created successfully'),
+          content: Text('User created successfully'),
           duration: Duration(seconds: 2),
         ),
       );
+      return userModel;
     } catch (error) {
       // Handle errors
-      print('Error creating recipe: $error');
+      print('Error creating user: $error');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Error creating recipe'),
+          content: Text('Error creating user'),
           duration: Duration(seconds: 2),
         ),
       );
+      return UserModel(email: "", name: "", directories: [], profileImage: "", theme: "");
     }
   }
 
