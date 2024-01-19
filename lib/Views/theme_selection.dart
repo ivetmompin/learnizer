@@ -1,10 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:learnizer/Business/utilities_learnize.dart';
 import 'package:learnizer/Models/directory_model.dart';
 import 'package:learnizer/Models/user_model.dart';
-import 'package:learnizer/Views/user_menu.dart';
+import 'package:learnizer/Views/Visualize/user_menu.dart';
 
 
 class ThemeSelectionPage extends StatefulWidget {
@@ -89,7 +88,7 @@ class _ThemeSelectionPageState extends State<ThemeSelectionPage> {
                               if (errorMessage != null)
                                 Text(
                                   errorMessage!,
-                                  style: TextStyle(color: Colors.red),
+                                  style: const TextStyle(color: Colors.red),
                                 ),
                               // buildLogInBtn(),
                             ],
@@ -129,27 +128,40 @@ class _ThemeSelectionPageState extends State<ThemeSelectionPage> {
     );
   }
 
-  buildUserImage(){
+  buildUserImage() {
     return CircleAvatar(
-      radius: profileHeight/1.8,
-      backgroundColor: Colors.transparent,
-      child:CircleAvatar(
-        radius: profileHeight/2, // Adjust the radius as needed
-        backgroundColor: Colors.transparent, // Border color// Make sure the background is transparent
+      radius: profileHeight / 1.8,
+      backgroundColor: Colors.white,
+      child: CircleAvatar(
+        radius: profileHeight / 2,
+        backgroundColor: Colors.white,
         child: ClipOval(
-          child: ColoredBox(
-            color: Colors.white,
-            child: SizedBox(
-                width: profileHeight, // Adjust the width as needed
+          child: Stack(
+            children: [
+              imageUrlUser.isNotEmpty
+                  ? Image.network(
+                imageUrlUser,
+                width: profileHeight,
                 height: profileHeight,
+                fit: BoxFit.cover,
+              )
+                  : Container(),
+              Positioned(
+                top: profileHeight / 3.3, // Adjust this value to center vertically
+                left: profileHeight / 3.3, // Adjust this value to center horizontally,
                 child: IconButton(
-                  icon: const Icon(CupertinoIcons.camera),
+                  icon: const Icon(Icons.camera_alt),
                   color: utilities.returnColorByTheme(selectedTheme),
-                  onPressed: () {
-                    utilities.pickImageFromGalleryOrCamera("camera");
+                  onPressed: () async {
+                    final imageUrl =
+                    await utilities.pickImageFromGalleryOrCamera("camera");
+                    setState(() {
+                      imageUrlUser = imageUrl.toString();
+                    });
                   },
-                )
-            ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -190,13 +202,13 @@ class _ThemeSelectionPageState extends State<ThemeSelectionPage> {
               ),
               decoration: InputDecoration(
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.only(top: 14),
+                  contentPadding: const EdgeInsets.only(top: 14),
                   prefixIcon: Icon(
                       Icons.person,
                       color: utilities.returnColorByTheme(selectedTheme)
                   ),
                   hintText: 'Username',
-                  hintStyle: TextStyle(
+                  hintStyle: const TextStyle(
                       color: Colors.black38
                   )
               ),
@@ -290,7 +302,7 @@ class _ThemeSelectionPageState extends State<ThemeSelectionPage> {
               ),
               child: GridView.count(
                 crossAxisCount: 3,
-                padding: EdgeInsets.all(9.0),
+                padding: const EdgeInsets.all(9.0),
                 children: [
                   getContainerPiece("blue"),
                   getContainerPiece("green"),
@@ -315,7 +327,7 @@ class _ThemeSelectionPageState extends State<ThemeSelectionPage> {
           backgroundColor: Colors.transparent, // Border color// Make sure the background is transparent
           child: ClipOval(
             child: Container(
-              padding: EdgeInsets.all(2.0),
+              padding: const EdgeInsets.all(2.0),
               height: double.infinity,
               width: double.infinity,
               decoration: BoxDecoration(

@@ -1,20 +1,21 @@
-import 'dart:js_util';
+// Remove the following line, as 'dart:js_util' is not needed for mobile apps
+// import 'dart:js_util';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnizer/Business/utilities_learnize.dart';
 import 'package:learnizer/Models/directory_model.dart';
-import 'package:learnizer/Views/theme_selection.dart';
 
 import '../../Models/task_model.dart';
 import '../../Models/user_model.dart';
 
 
+
 class AddTaskPage extends StatefulWidget {
   final UserModel user;
-  final int? directory;
-  const AddTaskPage({required this.user, this.directory, Key? key}) : super(key: key);
+  final int directory;
+  const AddTaskPage({required this.user,required this.directory, Key? key}) : super(key: key);
 
   @override
   State<AddTaskPage> createState() => _AddTaskPageState();
@@ -26,9 +27,10 @@ class _AddTaskPageState extends State<AddTaskPage>{
   final double profileHeight = 144;
   late final _user = widget.user;
   late final _directory = widget.directory;
+  String textDirectory = '';
   UtilitiesLearnizer utilities = UtilitiesLearnizer();
   String imageUrlLogo='';
-  String imageUrlCover='';
+  String imageUrlTask='';
   String? errorMessage;
   final myControllerName = TextEditingController();
   final myControllerDeadline = TextEditingController();
@@ -38,7 +40,7 @@ class _AddTaskPageState extends State<AddTaskPage>{
   Future<String> getThemeFromUtilities(String file, String caseImg) async {
     String imageUrl = await utilities.getTheme(file);
     if (caseImg == "cover") {
-      imageUrlCover = imageUrl;
+      imageUrlTask = imageUrl;
     } else {
       imageUrlLogo = imageUrl;
     }
@@ -89,26 +91,22 @@ class _AddTaskPageState extends State<AddTaskPage>{
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              buildLogoImage(),
                               const SizedBox(height: 30),
                               const Text(
-                                'Sign Up',
+                                'Add Task',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 40,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(height: 30),
-                              utilities.buildTextField(myControllerName, _user.theme, "Name", Icons.edit),
-                              const SizedBox(height: 20),
-                              utilities.buildTextField(myControllerDescription,_user.theme,"Description",Icons.person),
-                              const SizedBox(height: 20),
-                              utilities.buildTextField(myControllerDeadline, _user.theme, "Deadline", Icons.timer),
+                              utilities.buildTextField(myControllerName,TextInputType.text,_user.theme, "Name", Icons.edit),
+                              utilities.buildTextField(myControllerDescription,TextInputType.text,_user.theme,"Description",Icons.text_snippet_outlined),
+                              utilities.buildTextField(myControllerDeadline,TextInputType.text,_user.theme, "Deadline", Icons.timer),
                               if (errorMessage != null)
                                 Text(
                                   errorMessage!,
-                                  style: TextStyle(color: Colors.red),
+                                  style: const TextStyle(color: Colors.red),
                                 ),
                             ],
                           )
@@ -141,157 +139,43 @@ class _AddTaskPageState extends State<AddTaskPage>{
       ),
     );
   }
-
-  buildEmail(TextEditingController controller){
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Email',
-          style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold
+  buildTaskImage() {
+    return CircleAvatar(
+      radius: profileHeight / 1.8,
+      backgroundColor: Colors.white,
+      child: CircleAvatar(
+        radius: profileHeight / 2,
+        backgroundColor: Colors.white,
+        child: ClipOval(
+          child: Stack(
+            children: [
+              imageUrlTask.isNotEmpty
+                  ? Image.network(
+                imageUrlTask,
+                width: profileHeight,
+                height: profileHeight,
+                fit: BoxFit.cover,
+              )
+                  : Container(),
+              Positioned(
+                top: profileHeight / 3.3, // Adjust this value to center vertically
+                left: profileHeight / 3.3, // Adjust this value to center horizontally,
+                child: IconButton(
+                  icon: const Icon(Icons.camera_alt),
+                  color: utilities.returnColorByTheme(_user.theme),
+                  onPressed: () async {
+                    final imageUrl =
+                    await utilities.pickImageFromGalleryOrCamera("camera");
+                    setState(() {
+                      imageUrlTask = imageUrl.toString();
+                    });
+                  },
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 10),
-        Container(
-            alignment: Alignment.centerLeft,
-            decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius:  BorderRadius.circular(10),
-                boxShadow: const [
-                  BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 6,
-                      offset: Offset(0,2)
-                  )
-                ]
-            ),
-            height: 60,
-            child: TextField(
-              controller: controller,
-              keyboardType: TextInputType.emailAddress,
-              style: const TextStyle(
-                  color: Colors.black87
-              ),
-              decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.only(top: 14),
-                  prefixIcon: Icon(
-                      Icons.email,
-                      color: Color(0xFF6CCBCA)
-                  ),
-                  hintText: 'Email',
-                  hintStyle: TextStyle(
-                      color: Colors.black38
-                  )
-              ),
-            )
-        )
-      ],
-    );
-  }
-
-  buildPassword(TextEditingController controller){
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Password',
-          style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold
-          ),
-        ),
-        const SizedBox(height: 10),
-        Container(
-            alignment: Alignment.centerLeft,
-            decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius:  BorderRadius.circular(10),
-                boxShadow: const [
-                  BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 6,
-                      offset: Offset(0,2)
-                  )
-                ]
-            ),
-            height: 60,
-            child: TextField(
-              controller: controller,
-              obscureText: true,
-              style: const TextStyle(
-                  color: Colors.black87
-              ),
-              decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.only(top: 14),
-                  prefixIcon: Icon(
-                      Icons.lock,
-                      color: Color(0xFF6CCBCA)
-                  ),
-                  hintText: 'Password',
-                  hintStyle: TextStyle(
-                      color: Colors.black38
-                  )
-              ),
-            )
-        )
-      ],
-    );
-  }
-
-  buildPasswordConfirmation(TextEditingController controller){
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Confirm Password',
-          style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold
-          ),
-        ),
-        const SizedBox(height: 10),
-        Container(
-            alignment: Alignment.centerLeft,
-            decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius:  BorderRadius.circular(10),
-                boxShadow: const [
-                  BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 6,
-                      offset: Offset(0,2)
-                  )
-                ]
-            ),
-            height: 60,
-            child: TextField(
-              controller: controller,
-              obscureText: true,
-              style: const TextStyle(
-                  color: Colors.black87
-              ),
-              decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.only(top: 14),
-                  prefixIcon: Icon(
-                      Icons.verified_user_rounded,
-                      color: Color(0xFF6CCBCA)
-                  ),
-                  hintText: 'Confirm Password',
-                  hintStyle: TextStyle(
-                      color: Colors.black38
-                  )
-              ),
-            )
-        )
-      ],
+      ),
     );
   }
 
@@ -336,11 +220,13 @@ class _AddTaskPageState extends State<AddTaskPage>{
         if(_directory!=null) {
            directoryToEdit = _user.directories.elementAt(_directory);
         }else {
-           directoryToEdit = _user.directories.where((directory) => directory.name == myControllerDirectory.text);
+          textDirectory = myControllerDirectory.text;
+          directoryToEdit = _user.directories.firstWhere((element) => element.name == textDirectory);
         }
         directoryToEdit.tasks.add(task);
         _user.directories.removeWhere((directory) => directoryToEdit.name == name);
         _user.directories.add(directoryToEdit);
+        utilities.updateUserData(_user);
       } on FirebaseAuthException catch (e) {
         if (e.code == 'weak-password') {
           setState(() {
@@ -362,28 +248,6 @@ class _AddTaskPageState extends State<AddTaskPage>{
     myControllerDeadline.clear();
     myControllerDescription.clear();
   }
-
-    deleteUser(String name) async {
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection("userDatabase")
-          .where("Name", isEqualTo: _user.name)
-          .get();
-
-      // Check if there's a document with the given name
-      if (querySnapshot.docs.isNotEmpty) {
-        // Get the first document in the result (assuming there's only one match)
-        DocumentSnapshot documentSnapshot = querySnapshot.docs.first;
-        // Delete the document by its ID
-        await FirebaseFirestore.instance.collection("userDatabase").doc(
-            documentSnapshot.id).delete();
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ViewDirectoryPage(userEmail: _user.email),
-          ),
-        );
-      }
-    }
 
 }
 

@@ -1,36 +1,30 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnizer/Business/utilities_learnize.dart';
 import 'package:learnizer/Models/directory_model.dart';
-
-import '../../Models/task_model.dart';
+import 'package:learnizer/Views/Add/add_task.dart';
 import '../../Models/user_model.dart';
 
 
-class AddTaskPage extends StatefulWidget {
+class ViewTasksPage extends StatefulWidget {
   final UserModel user;
-  final int? directory;
-  const AddTaskPage({required this.user, this.directory, Key? key}) : super(key: key);
+  final int directory;
+  const ViewTasksPage({required this.user, required this.directory, Key? key}) : super(key: key);
 
   @override
-  State<AddTaskPage> createState() => _AddTaskPageState();
+  State<ViewTasksPage> createState() => _ViewDirectoriesPageState();
 }
 
-class _AddTaskPageState extends State<AddTaskPage>{
+class _ViewDirectoriesPageState extends State<ViewTasksPage>{
   final _database = FirebaseFirestore.instance;
   final double coverHeight = 210;
   final double profileHeight = 144;
   late final _user = widget.user;
-  late final _directory = widget.directory;
+  late final _directoryIndex = widget.directory;
   UtilitiesLearnizer utilities = UtilitiesLearnizer();
   String imageUrlLogo='';
   String imageUrlCover='';
   String? errorMessage;
-  final myControllerName = TextEditingController();
-  final myControllerDeadline = TextEditingController();
-  final myControllerDescription = TextEditingController();
-  final myControllerDirectory = TextEditingController();
   // This widget is the root of your application.
   Future<String> getThemeFromUtilities(String file, String caseImg) async {
     String imageUrl = await utilities.getTheme(file);
@@ -88,25 +82,14 @@ class _AddTaskPageState extends State<AddTaskPage>{
                             children: [
                               buildLogoImage(),
                               const SizedBox(height: 30),
-                              const Text(
-                                'Sign Up',
+                              Text(
+                                '${_user.directories.elementAt(_directoryIndex).name} Tasks',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 40,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(height: 30),
-                              utilities.buildTextField(myControllerName, _user.theme, "Name", Icons.edit),
-                              const SizedBox(height: 20),
-                              utilities.buildTextField(myControllerDescription,_user.theme,"Description",Icons.person),
-                              const SizedBox(height: 20),
-                              utilities.buildTextField(myControllerDeadline, _user.theme, "Deadline", Icons.timer),
-                              if (errorMessage != null)
-                                Text(
-                                  errorMessage!,
-                                  style: TextStyle(color: Colors.red),
-                                ),
                             ],
                           )
                       )
@@ -300,9 +283,12 @@ class _AddTaskPageState extends State<AddTaskPage>{
           child: OutlinedButton(
             onPressed: () {
               // All fields are valid
-              _addTask(myControllerName, myControllerDescription,
-                  myControllerDeadline, context);
-
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AddTaskPage(user: _user, directory: _directoryIndex,),
+                ),
+              );
             },
             style: OutlinedButton.styleFrom(
               // Customize the button style here
@@ -320,47 +306,7 @@ class _AddTaskPageState extends State<AddTaskPage>{
     );
   }
 
-  _addTask(TextEditingController myControllerName, TextEditingController myControllerDescription, TextEditingController myControllerDeadline, context) async {
-    final String name = myControllerName.text.trim();
-    final String description = myControllerDescription.text.trim();
-    final String deadline = myControllerDeadline.text.trim();
-    final DateTime deadlineDate = DateTime.parse(deadline);
-
-    if (errorMessage == null) {
-      try {
-        TaskModel task = TaskModel(name: name, description: description, deadline: deadlineDate,attachments: []);
-        DirectoryModel directoryToEdit;
-        if(_directory!=null) {
-          directoryToEdit = _user.directories.elementAt(_directory);
-        }else {
-          directoryToEdit = _user.directories.where((directory) => directory.name == myControllerDirectory.text);
-        }
-        directoryToEdit.tasks.add(task);
-        _user.directories.removeWhere((directory) => directoryToEdit.name == name);
-        _user.directories.add(directoryToEdit);
-      } on FirebaseAuthException catch (e) {
-        if (e.code == 'weak-password') {
-          setState(() {
-            errorMessage = 'The password provided is too weak.';
-          });
-        } else if (e.code == 'email-already-in-use') {
-          setState(() {
-            errorMessage = 'This account already exists.';
-          });
-        }
-      } catch (e) {
-        setState(() {
-          errorMessage = 'An error occurred: $e';
-        });
-      }
-    }
-    myControllerDirectory.clear();
-    myControllerName.clear();
-    myControllerDeadline.clear();
-    myControllerDescription.clear();
-  }
-
-  deleteUser(String name) async {
+  _deleteTask(String name) async {
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance
         .collection("userDatabase")
         .where("Name", isEqualTo: _user.name)
@@ -376,7 +322,7 @@ class _AddTaskPageState extends State<AddTaskPage>{
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => ViewDirectoryPage(userEmail: _user.email),
+          builder: (context) => ViewTasksPage(user: _user,directory: _directoryIndex),
         ),
       );
     }

@@ -2,7 +2,6 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:learnizer/Views/login_page.dart';
-import 'package:learnizer/Views/theme_selection.dart';
 import 'package:learnizer/firebase_options.dart';
 
 void main() async {
@@ -52,7 +51,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: LoginPage(),
+      home: const LoginPage(),
       debugShowCheckedModeBanner: false,
     );
   }

@@ -1,8 +1,10 @@
 
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:learnizer/Models/user_model.dart';
 
 class UtilitiesLearnizer {
 
@@ -25,7 +27,7 @@ class UtilitiesLearnizer {
     Reference referenceDirImages = referenceRoot.child('images');
     Reference referenceImageToUpload = referenceDirImages.child(uniqueFileName);
     try{
-      await referenceImageToUpload.putFile(File(returnedImage!.path));
+      await referenceImageToUpload.putFile(File(returnedImage.path));
       return await referenceImageToUpload.getDownloadURL();
     }catch(error){
       //some error
@@ -37,7 +39,7 @@ class UtilitiesLearnizer {
     try {
       Reference ref = FirebaseStorage.instance.ref().child('Themes/$file');
       url = await ref.getDownloadURL();
-      print("value of url: "+url);
+      print("value of url: $url");
     } catch (e) {
       // Handle errors (e.g., file not found)
       print('Error getting image URL: $e');
@@ -47,46 +49,75 @@ class UtilitiesLearnizer {
 
   Color returnColorByTheme(String? theme){
     switch(theme){
-      case "pink": return Color(0xffc64b8c);
-      case "purple": return Color(0xff57026f);
-      case "green": return Color(0xff3bb143);
-      case "yellow": return Color(0xffffbf00);
-      case "orange": return Color(0xffff5f00);
-      default: return Color(0xff6CCBCA);
+      case "pink": return const Color(0xffc64b8c);
+      case "purple": return const Color(0xff57026f);
+      case "green": return const Color(0xff3bb143);
+      case "yellow": return const Color(0xffffbf00);
+      case "orange": return const Color(0xffff5f00);
+      default: return const Color(0xff6CCBCA);
     }
   }
 
 
   List<Color> getCorrectColors(String? selectedTheme) {
     switch(selectedTheme) {
-      case "pink": return [ Color(0x66c64b8c), Color(0x99c64b8c), Color(0xccc64b8c), Color(0xFFc64b8c)];
-      case "purple": return [ Color(0x6657026f), Color(0x9957026f), Color(0xcc57026f), Color(0xFF57026f)];
-      case "green": return [Color(0x663bb143), Color(0x993bb143), Color(0xcc3bb143), Color(0xFF3bb143)];
-      case "yellow": return [Color(0x66ffbf00), Color(0x99ffbf00), Color(0xccffbf00), Color(0xFFffbf00)];
-      case "orange": return [Color(0x66ff5f00), Color(0x99ff5f00), Color(0xccff5f00), Color(0xFFff5f00)];
-      default: return [Color(0x666CCBCA), Color(0x996CCBCA), Color(0xcc6CCBCA), Color(0xFF6CCBCA)];
+      case "pink": return [ const Color(0x66c64b8c), const Color(0x99c64b8c), const Color(0xccc64b8c), const Color(0xFFc64b8c)];
+      case "purple": return [ const Color(0x6657026f), const Color(0x9957026f), const Color(0xcc57026f), const Color(0xFF57026f)];
+      case "green": return [const Color(0x663bb143), const Color(0x993bb143), const Color(0xcc3bb143), const Color(0xFF3bb143)];
+      case "yellow": return [const Color(0x66ffbf00), const Color(0x99ffbf00), const Color(0xccffbf00), const Color(0xFFffbf00)];
+      case "orange": return [const Color(0x66ff5f00), const Color(0x99ff5f00), const Color(0xccff5f00), const Color(0xFFff5f00)];
+      default: return [const Color(0x666CCBCA), const Color(0x996CCBCA), const Color(0xcc6CCBCA), const Color(0xFF6CCBCA)];
     }
   }
 
-  TextField buildTextField(TextEditingController controller, String theme, String name, IconData icon){
-    return TextField(
-      controller: controller,
-      keyboardType: TextInputType.emailAddress,
-      style: const TextStyle(
-        color: Colors.black87
-      ),
-      decoration: InputDecoration(
-        border: InputBorder.none,
-        contentPadding: EdgeInsets.only(top: 14),
-        prefixIcon: Icon(
-          icon,
-          color: returnColorByTheme(theme)
+  Column buildTextField(TextEditingController controller, TextInputType type, String theme, String name, IconData icon){
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          name,
+          style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold
+          ),
         ),
-      hintText: 'Email',
-      hintStyle: TextStyle(
-        color: Colors.black38
+        const SizedBox(height: 10),
+        Container(
+            alignment: Alignment.centerLeft,
+            decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius:  BorderRadius.circular(10),
+                boxShadow: const [
+                  BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 6,
+                      offset: Offset(0,2)
+                  )
+                ]
+            ),
+            height: 60,
+            child: TextField(
+              controller: controller,
+              keyboardType: TextInputType.emailAddress,
+              style: const TextStyle(
+                  color: Colors.black87
+              ),
+              decoration: InputDecoration(
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.only(top: 14),
+                  prefixIcon: Icon(
+                      icon,
+                      color: returnColorByTheme(theme),
+                  ),
+                  hintText: name,
+                  hintStyle: TextStyle(
+                      color: Colors.black38
+                  )
+              ),
+            )
         )
-      ),
+      ],
     );
   }
   Container buildOutlinedButton(String theme, String name, dynamic onPressedFunction){
@@ -110,5 +141,27 @@ class UtilitiesLearnizer {
           ),
         )
     );
+  }
+
+  updateUserData(UserModel user) async {
+    deleteUserData(user);
+    await FirebaseFirestore.instance.collection("userDatabase").add(user.toJson());
+  }
+
+  deleteUserData(UserModel user) async {
+    FirebaseFirestore database = FirebaseFirestore.instance;
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection("userDatabase")
+        .where("Name", isEqualTo: user.name)
+        .get();
+
+    // Check if there's a document with the given name
+    if (querySnapshot.docs.isNotEmpty) {
+      // Get the first document in the result (assuming there's only one match)
+      DocumentSnapshot documentSnapshot = querySnapshot.docs.first;
+      // Delete the document by its ID
+      await FirebaseFirestore.instance.collection("userDatabase").doc(
+          documentSnapshot.id).delete();
+    }
   }
 }

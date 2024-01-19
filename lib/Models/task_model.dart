@@ -20,12 +20,20 @@ class TaskModel{
     return{"Name": name, "Description": description, "Deadline": deadline, "Attachments": attachments};
   }
 
-  factory TaskModel.fromMap(Map<String, dynamic> map) {
-    return TaskModel(
-      name: map['Name'] ?? '', // Provide a default value if 'id' is null
-      description: map['Description'] ?? '',
-      deadline: map['Deadline'] ?? '',
-      attachments: map['Attachments'] ?? '',
-    );
+  factory TaskModel.fromSnapshot(DocumentSnapshot<Map<String, dynamic>> document) {
+    final data = document.data();
+    if (data != null) {
+
+      return TaskModel(
+          name: data["Name"],
+          description: data["Description"],
+          deadline: data["Deadline"],
+          attachments: data["Attachments"],
+      );
+    } else {
+      DateTime dateTime = DateTime.now();
+      // Handle the case where data is null (optional)
+      return TaskModel(name:'',description:'',deadline: dateTime,attachments: []);
+    }
   }
 }

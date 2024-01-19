@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnizer/Business/utilities_learnize.dart';
 import 'package:learnizer/Views/sign_up.dart';
-import 'package:learnizer/Views/user_menu.dart';
+import 'package:learnizer/Views/Visualize/user_menu.dart';
 
 import '../Models/user_model.dart';
 
@@ -102,7 +102,7 @@ class _LoginPageState extends State<LoginPage>{
                               if (errorMessage != null)
                                 Text(
                                   errorMessage!,
-                                  style: TextStyle(color: Colors.red),
+                                  style: const TextStyle(color: Colors.red),
                                 ),
                               buildLogInBtn(),
                             ],
@@ -119,18 +119,13 @@ class _LoginPageState extends State<LoginPage>{
 
   buildLogoImage() {
     return CircleAvatar(
-      radius: profileHeight / 1.8,
-      backgroundColor: Colors.transparent,
-      child: CircleAvatar(
-        radius: profileHeight / 2,
-        backgroundColor: Colors.transparent,
-        child: ClipOval(
-          child: Image.network(
-            imageUrlLogo, // Replace 'assets/learnizer.png' with the correct path
-            width: profileHeight,
-            height: profileHeight,
-            fit: BoxFit.cover,
-          ),
+      // ... other properties
+      child: ClipOval(
+        child: Image.network(
+          imageUrlLogo, // Make sure this is a valid URL
+          width: profileHeight,
+          height: profileHeight,
+          fit: BoxFit.cover,
         ),
       ),
     );
@@ -238,73 +233,63 @@ class _LoginPageState extends State<LoginPage>{
     );
   }
 
-  buildNoAccountButton(){
-    return Container(
-      alignment: Alignment.centerRight,
-      child: Expanded(
-        child: Align(
-          alignment: Alignment.bottomCenter,
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 12.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text("Don't you have an account? ",style: TextStyle(
-                  color: CupertinoColors.white,)),
-                TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SignUpPage(),
-                        ),
-                      );
-                    },
-                    child: const Text("Sign Up", style: TextStyle(
-                        color: CupertinoColors.white,
-                        fontWeight: FontWeight.bold),)
-                )
-              ],
+  buildNoAccountButton() {
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 12.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text("Don't you have an account? ", style: TextStyle(color: CupertinoColors.white,)),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SignUpPage(),
+                  ),
+                );
+              },
+              child: const Text("Sign Up", style: TextStyle(color: CupertinoColors.white, fontWeight: FontWeight.bold)),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
 
-  buildLogInBtn(){
+  buildLogInBtn() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 25),
       child: SizedBox(
         width: double.infinity,
         child: OutlinedButton(
-        onPressed: () { if (
-        !emailRegex.hasMatch(myControllerEmail.text)) {
-          setState(() {
-            errorMessage = 'Please provide a valid email';
-          });
-        } else {
-          // Reset errors when the email is entered properly
-          setState(() {
-            errorMessage = null;
-          });
-        }
-        // All fields are valid
-        _signInUser(
-            myControllerEmail, myControllerPassword, context); },
-        style: OutlinedButton.styleFrom(
-          // Customize the button style here
-          side: const BorderSide(width: 2, color: Colors.white),
-          foregroundColor: Colors.white, // Text color// Elevation (shadow)
-        ),
-        child: const Text('LOGIN',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold
-          )
+          onPressed: () async {
+            if (!emailRegex.hasMatch(myControllerEmail.text)) {
+              setState(() {
+                errorMessage = 'Please provide a valid email';
+              });
+            } else {
+              // Reset errors when the email is entered properly
+              setState(() {
+                errorMessage = null;
+              });
+            }
+
+            // All fields are valid
+            await _signInUser(myControllerEmail, myControllerPassword, context);
+          },
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(width: 2, color: Colors.white),
+            foregroundColor: Colors.white,
+          ),
+          child: const Text(
+            'LOGIN',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
         ),
       ),
-      )
     );
   }
 

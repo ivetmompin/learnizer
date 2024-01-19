@@ -3,9 +3,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnizer/Business/utilities_learnize.dart';
+import 'package:learnizer/Models/directory_model.dart';
+import 'package:learnizer/Views/Add/add_directory.dart';
 
-import '../Models/user_model.dart';
-import 'add_menu.dart';
+import '../../Models/user_model.dart';
+import 'Individual/view_directory.dart';
 
 
 class UserMenuPage extends StatefulWidget {
@@ -81,7 +83,7 @@ class _UserMenuPageState extends State<UserMenuPage> {
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 25,
-                        vertical: 120,
+                        vertical: 80,
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -92,20 +94,21 @@ class _UserMenuPageState extends State<UserMenuPage> {
                               onPressed: () { Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => AddMenuPage(user: _user),
+                                  builder: (context) => AddDirectoryPage(user: _user),
                                 ),
                               );},
                               style: ButtonStyle(
-                                shape: MaterialStateProperty.all(CircleBorder()),
-                                padding: MaterialStateProperty.all(EdgeInsets.all(10)),
+                                shape: MaterialStateProperty.all(const CircleBorder()),
+                                padding: MaterialStateProperty.all(const EdgeInsets.all(10)),
                                 backgroundColor: MaterialStateProperty.all(utilities.returnColorByTheme(_user.theme)), // <-- Button color
                                 overlayColor: MaterialStateProperty.resolveWith<Color?>((states) {
-                                  if (states.contains(MaterialState.pressed)) return Colors.red; // <-- Splash color
+                                  if (states.contains(MaterialState.pressed)) return Colors.red;
+                                  return null; // <-- Splash color
                                 }),
                               ),
                               child: const Icon(Icons.add),
                             )),
-                          const SizedBox(height: 25),
+                          const SizedBox(height: 15),
                           Text(
                             'Welcome ${_user.name}',
                             style: const TextStyle(
@@ -123,18 +126,8 @@ class _UserMenuPageState extends State<UserMenuPage> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 10),
-                          CarouselSlider(options: CarouselOptions(
-                            autoPlay: false,
-                            height: MediaQuery.of(context).size.width / 0.9,
-                            enlargeCenterPage: true,
-                            aspectRatio: 2.0,
-                            onPageChanged: (index,reason){
-                              setState((){
-                                myCurrentIndex=index;
-                              });
-                            }
-                          ), items: getDirectories())
+                          const SizedBox(height: 40),
+                          setContent()
                         ],
                       ),
                     ),
@@ -151,6 +144,63 @@ class _UserMenuPageState extends State<UserMenuPage> {
     );
   }
 
+  Widget setContent() {
+    if (_user.directories.isNotEmpty) {
+      return CarouselSlider(
+        options: CarouselOptions(
+          autoPlay: false,
+          height: MediaQuery.of(context).size.width / 0.9,
+          enlargeCenterPage: true,
+          aspectRatio: 2.0,
+          onPageChanged: (index, reason) {
+            setState(() {
+              myCurrentIndex = index;
+            });
+          },
+        ),
+        items: getDirectories(),
+      );
+    } else {
+      return Container(
+        padding: const EdgeInsets.all(20.0),
+        margin: const EdgeInsets.all(5),
+        height: MediaQuery.of(context).size.width / 0.9,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: utilities.getCorrectColors(_user.theme),
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              "You have no directories",
+              style: TextStyle(color: Colors.white),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddDirectoryPage(user: _user),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                foregroundColor: utilities.returnColorByTheme(_user.theme), backgroundColor: Colors.white, // Change text color
+              ),
+              child: const Text("Create a Directory"),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
   buildErrorText(){
     return Text('You have no folders',
       style: TextStyle(
@@ -161,7 +211,8 @@ class _UserMenuPageState extends State<UserMenuPage> {
     );
   }
 
-  buildFolder() {
+  buildFolder(DirectoryModel directory) {
+    int index = _user.directories.indexOf(directory);
     return Container(
       padding: const EdgeInsets.all(2.0),
       margin: const EdgeInsets.all(5),
@@ -174,15 +225,22 @@ class _UserMenuPageState extends State<UserMenuPage> {
             colors: utilities.getCorrectColors(_user.theme),
           )),
       child: ElevatedButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ViewDirectoryPage(user: _user,directoryIndex: _user.directories.indexOf(directory)),
+            ),
+          );
+        },
         style: ElevatedButton.styleFrom(
           backgroundColor:
           Colors.transparent, // Make the button background transparent
           elevation: 0, // Remove the shadow
         ),
-        child: const Text(
-          "Folder",
-          style: TextStyle(color: Colors.white),
+        child: Text(
+          directory.name,
+          style: const TextStyle(color: Colors.white),
         ),
       ),
     );
@@ -190,8 +248,12 @@ class _UserMenuPageState extends State<UserMenuPage> {
 
   getDirectories() {
     List<Container> containers = [];
-    for(int i=0;i<4;i++){
-     containers.add(buildFolder());
+    if(_user.directories.isNotEmpty) {
+      for (int i = 0; i < _user.directories.length; i++) {
+        containers.add(buildFolder(_user.directories.elementAt(i)));
+      }
+    }else{
+      containers.add(buildFolder(DirectoryModel(name: "default", image: '', tasks: [])));
     }
     return containers;
   }

@@ -1,14 +1,11 @@
-import 'dart:html';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnizer/Business/utilities_learnize.dart';
 import 'package:learnizer/Models/task_model.dart';
-import 'package:learnizer/Views/theme_selection.dart';
 
+import '../../Models/directory_model.dart';
 import '../../Models/user_model.dart';
-
+import '../Visualize/user_menu.dart';
 
 class AddDirectoryPage extends StatefulWidget {
   final UserModel user;
@@ -25,16 +22,14 @@ class _AddDirectoryPageState extends State<AddDirectoryPage>{
   late final _user = widget.user;
   UtilitiesLearnizer utilities = UtilitiesLearnizer();
   String imageUrlLogo='';
-  String imageUrlCover='';
+  String imageUrlDirectory='';
   String? errorMessage;
   final myControllerName = TextEditingController();
-  final myControllerDeadline = TextEditingController();
-  final myControllerDescription = TextEditingController();
   // This widget is the root of your application.
   Future<String> getThemeFromUtilities(String file, String caseImg) async {
     String imageUrl = await utilities.getTheme(file);
     if (caseImg == "cover") {
-      imageUrlCover = imageUrl;
+      imageUrlDirectory = imageUrl;
     } else {
       imageUrlLogo = imageUrl;
     }
@@ -66,6 +61,7 @@ class _AddDirectoryPageState extends State<AddDirectoryPage>{
                 clipBehavior: Clip.none,
                 alignment: Alignment.center,
                 children: [
+                  buildUserImage(),
                   Container(
                       height: double.infinity,
                       width: double.infinity,
@@ -85,24 +81,11 @@ class _AddDirectoryPageState extends State<AddDirectoryPage>{
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              buildLogoImage(),
+                              buildUserImage(),
                               const SizedBox(height: 30),
-                              const Text(
-                                'Sign Up',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                              utilities.buildTextField(myControllerName, TextInputType.text, _user.theme, "Name", Icons.edit),
                               const SizedBox(height: 30),
-                              utilities.buildTextField(myControllerName, _user.theme, "Name", Icons.edit),
-                              const SizedBox(height: 20),
-                              utilities.buildTextField(myControllerDescription,_user.theme,"Description",Icons.person),
-                              const SizedBox(height: 20),
-                              utilities.buildTextField(myControllerDeadline, _user.theme, "Deadline", Icons.timer),
-                              const SizedBox(height: 30),
-                              utilities.buildOutlinedButton(_user.theme, "Add Task", _addTask(myControllerName, myControllerDescription, myControllerDeadline, context))
+                              buildAddDirectoryBtn()
                             ],
                           ),
                       )
@@ -115,61 +98,88 @@ class _AddDirectoryPageState extends State<AddDirectoryPage>{
     );
   }
 
-  buildLogoImage(){
-    getThemeFromUtilities("learnizer.png","logo");
+  buildAddDirectoryBtn(){
+    return Container(
+        padding: const EdgeInsets.symmetric(vertical: 25),
+        child: SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: () {
+              _addDirectory(myControllerName, context);
+            },
+            child: const Text('ADD DIRECTORY',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold
+                )
+            ),
+          ),
+        )
+    );
+  }
+
+  buildUserImage() {
     return CircleAvatar(
-      radius: profileHeight/1.8,
-      backgroundColor: Colors.transparent,
-      child:CircleAvatar(
-        radius: profileHeight/2, // Adjust the radius as needed
-        backgroundColor: Colors.transparent, // Border color// Make sure the background is transparent
+      radius: profileHeight / 1.8,
+      backgroundColor: Colors.white,
+      child: CircleAvatar(
+        radius: profileHeight / 2,
+        backgroundColor: Colors.white,
         child: ClipOval(
-          child: Image.network(
-            imageUrlLogo,
-            width: profileHeight, // Adjust the width as needed
-            height: profileHeight, // Adjust the height as needed
-            fit: BoxFit.cover, // Make sure the image covers the circular boundary
+          child: Stack(
+            children: [
+              imageUrlDirectory.isNotEmpty
+                  ? Image.network(
+                imageUrlDirectory,
+                width: profileHeight,
+                height: profileHeight,
+                fit: BoxFit.cover,
+              )
+                  : Container(),
+              Positioned(
+                top: profileHeight / 3.3, // Adjust this value to center vertically
+                left: profileHeight / 3.3, // Adjust this value to center horizontally,
+                child: IconButton(
+                  icon: const Icon(Icons.camera_alt),
+                  color: utilities.returnColorByTheme(_user.theme),
+                  onPressed: () async {
+                    final imageUrl =
+                    await utilities.pickImageFromGalleryOrCamera("gallery");
+                    setState(() {
+                      imageUrlDirectory = imageUrl.toString();
+                    });
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-_addTask(TextEditingController myControllerName, TextEditingController myControllerDescription, TextEditingController myControllerDeadline, context) async {
+_addDirectory(TextEditingController myControllerName, context) async {
   final String name = myControllerName.text.trim();
-  final String description = myControllerDescription.text.trim();
-  final String deadline = myControllerDeadline.text.trim();
-  final DateTime deadlineDate = DateTime.parse(deadline);
+  final List<TaskModel> tasks = [];
 
   if (errorMessage == null) {
     try {
-      _database.collection("userDatabase").add(
-      )
+      DirectoryModel directoryModel = DirectoryModel(name: name, image: imageUrlDirectory, tasks:tasks);
+      _user.directories.add(directoryModel);
+      utilities.updateUserData(_user);
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => ThemeSelectionPage(userEmail: email),
+          builder: (context) => UserMenuPage(user: _user),
         ),
       );
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'weak-password') {
-        setState(() {
-          errorMessage = 'The password provided is too weak.';
-        });
-      } else if (e.code == 'email-already-in-use') {
-        setState(() {
-          errorMessage = 'This account already exists.';
-        });
-      }
     } catch (e) {
       setState(() {
         errorMessage = 'An error occurred: $e';
       });
     }
   }
-  myControllerEmail.clear();
-  myControllerPassword.clear();
-  myControllerConfirmation.clear();
+  myControllerName.clear();
 }
 
 }
