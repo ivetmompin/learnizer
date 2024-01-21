@@ -61,7 +61,6 @@ class _AddDirectoryPageState extends State<AddDirectoryPage>{
                 clipBehavior: Clip.none,
                 alignment: Alignment.center,
                 children: [
-                  buildUserImage(),
                   Container(
                       height: double.infinity,
                       width: double.infinity,
@@ -83,7 +82,7 @@ class _AddDirectoryPageState extends State<AddDirectoryPage>{
                             children: [
                               buildUserImage(),
                               const SizedBox(height: 30),
-                              utilities.buildTextField(myControllerName, TextInputType.text, _user.theme, "Name", Icons.edit),
+                              utilities.buildTextField(myControllerName, TextInputType.text, false,_user.theme, "Name", Icons.edit, 60, 1),
                               const SizedBox(height: 30),
                               buildAddDirectoryBtn()
                             ],
@@ -167,7 +166,7 @@ _addDirectory(TextEditingController myControllerName, context) async {
       DirectoryModel directoryModel = DirectoryModel(name: name, image: imageUrlDirectory, tasks:tasks);
       _user.directories.add(directoryModel);
       utilities.updateUserData(_user);
-      Navigator.pushReplacement(
+      Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => UserMenuPage(user: _user),

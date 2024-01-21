@@ -15,36 +15,14 @@ class DirectoryModel{
   });
 
   toJson(){
-    return{"Name":name,"Image":image,"Tasks":tasks};
-  }
-
-  factory DirectoryModel.fromSnapshot(DocumentSnapshot<Map<String, dynamic>> document) {
-    final data = document.data();
-    if (data != null) {
-      // Assuming "Tasks" is a List<dynamic> in Firestore
-      final List<dynamic>? tasksData = data["Tasks"];
-
-      // Use map() to convert each item in the list to a TaskModel
-      final List<TaskModel> tasks = tasksData?.map((taskData) {
-        return TaskModel.fromSnapshot(taskData);
-      }).toList() ?? [];
-
-      return DirectoryModel(
-        name: data["Name"],
-        image: data["Image"],
-        tasks: tasks,
-      );
-    } else {
-      // Handle the case where data is null (optional)
-      return DirectoryModel(name: '',image: '',tasks: []);
-    }
+    return{"Name":name,"Image":image,"Tasks":tasks.map((task) => task.toJson()).toList()};
   }
 
   factory DirectoryModel.fromMap(Map<String, dynamic> map) {
     return DirectoryModel(
       name: map["Name"] ?? '',
       image: map["Image"] ?? '',
-      tasks: map['Tasks'] ?? '',
+      tasks: (map['Tasks'] as List<dynamic>?)?.map((task) => TaskModel.fromMap(task)).toList() ?? [],
     );
   }
 }

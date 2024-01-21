@@ -1,6 +1,5 @@
 
-
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 class TaskModel{
 
@@ -20,20 +19,25 @@ class TaskModel{
     return{"Name": name, "Description": description, "Deadline": deadline, "Attachments": attachments};
   }
 
-  factory TaskModel.fromSnapshot(DocumentSnapshot<Map<String, dynamic>> document) {
-    final data = document.data();
-    if (data != null) {
+  factory TaskModel.fromMap(Map<String, dynamic> map) {
+    String deadlineAux = map['Deadline'];
+    DateTime deadline;
 
-      return TaskModel(
-          name: data["Name"],
-          description: data["Description"],
-          deadline: data["Deadline"],
-          attachments: data["Attachments"],
-      );
-    } else {
-      DateTime dateTime = DateTime.now();
-      // Handle the case where data is null (optional)
-      return TaskModel(name:'',description:'',deadline: dateTime,attachments: []);
+    try {
+      // Try parsing the date with the expected format "dd/MM/yyyy"
+      DateFormat format = DateFormat("dd/MM/yyyy");
+      deadline = format.parse(deadlineAux);
+    } catch (e) {
+      print('Error parsing deadline: $e');
+      // Handle parsing error, or use a default date if needed
+      deadline = DateTime.now();
     }
+    return TaskModel(
+      name: map["Name"] ?? '',
+      description: map["Description"] ?? '',
+      deadline: deadline,
+      attachments: (map['Attachments'] as List<dynamic>?)?.map((attachment) => attachment.toString()).toList() ?? [],
+    );
   }
+
 }

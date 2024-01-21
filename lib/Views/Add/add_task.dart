@@ -6,9 +6,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnizer/Business/utilities_learnize.dart';
 import 'package:learnizer/Models/directory_model.dart';
+import 'package:learnizer/Views/Visualize/Individual/view_directory.dart';
 
 import '../../Models/task_model.dart';
 import '../../Models/user_model.dart';
+import 'package:intl/intl.dart';
 
 
 
@@ -100,14 +102,18 @@ class _AddTaskPageState extends State<AddTaskPage>{
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              utilities.buildTextField(myControllerName,TextInputType.text,_user.theme, "Name", Icons.edit),
-                              utilities.buildTextField(myControllerDescription,TextInputType.text,_user.theme,"Description",Icons.text_snippet_outlined),
-                              utilities.buildTextField(myControllerDeadline,TextInputType.text,_user.theme, "Deadline", Icons.timer),
+                              const SizedBox(height: 50),
+                              utilities.buildTextField(myControllerName,TextInputType.text,false,_user.theme, "Name", Icons.edit,60,1),
+                              const SizedBox(height: 20),
+                              utilities.buildTextField(myControllerDescription,TextInputType.text,false,_user.theme,"Description",Icons.text_snippet_outlined,240,6),
+                              const SizedBox(height: 20),
+                              utilities.buildTextField(myControllerDeadline,TextInputType.text,false,_user.theme, "Deadline(dd/MM/yyyy)", Icons.timer,60,1),
                               if (errorMessage != null)
                                 Text(
                                   errorMessage!,
                                   style: const TextStyle(color: Colors.red),
                                 ),
+                              buildAddTaskBtn()
                             ],
                           )
                       )
@@ -139,6 +145,7 @@ class _AddTaskPageState extends State<AddTaskPage>{
       ),
     );
   }
+
   buildTaskImage() {
     return CircleAvatar(
       radius: profileHeight / 1.8,
@@ -178,25 +185,21 @@ class _AddTaskPageState extends State<AddTaskPage>{
       ),
     );
   }
-
-  buildAddTaskBtn(){
+  buildAddTaskBtn() {
     return Container(
         padding: const EdgeInsets.symmetric(vertical: 25),
         child: SizedBox(
           width: double.infinity,
           child: OutlinedButton(
             onPressed: () {
-              // All fields are valid
-              _addTask(myControllerName, myControllerDescription,
-                  myControllerDeadline, context);
-
-            },
+                _addTask(myControllerName, myControllerDescription, myControllerDeadline,context);
+              },
             style: OutlinedButton.styleFrom(
               // Customize the button style here
               side: const BorderSide(width: 2, color: Colors.white),
               foregroundColor: Colors.white, // Text color// Elevation (shadow)
             ),
-            child: const Text('SIGN UP',
+            child: const Text('ADD TASK',
                 style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold
@@ -211,22 +214,20 @@ class _AddTaskPageState extends State<AddTaskPage>{
     final String name = myControllerName.text.trim();
     final String description = myControllerDescription.text.trim();
     final String deadline = myControllerDeadline.text.trim();
-    final DateTime deadlineDate = DateTime.parse(deadline);
+    DateFormat format = DateFormat("dd/MM/yyyy");
+    final DateTime deadlineDate = format.parse(deadline);
 
     if (errorMessage == null) {
       try {
         TaskModel task = TaskModel(name: name, description: description, deadline: deadlineDate,attachments: []);
-        DirectoryModel directoryToEdit;
-        if(_directory!=null) {
-           directoryToEdit = _user.directories.elementAt(_directory);
-        }else {
-          textDirectory = myControllerDirectory.text;
-          directoryToEdit = _user.directories.firstWhere((element) => element.name == textDirectory);
-        }
-        directoryToEdit.tasks.add(task);
-        _user.directories.removeWhere((directory) => directoryToEdit.name == name);
-        _user.directories.add(directoryToEdit);
+        _user.directories.elementAt(_directory).tasks.add(task);
         utilities.updateUserData(_user);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ViewDirectoryPage(user: _user,directoryIndex: _directory),
+          ),
+        );
       } on FirebaseAuthException catch (e) {
         if (e.code == 'weak-password') {
           setState(() {

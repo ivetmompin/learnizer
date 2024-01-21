@@ -1,4 +1,5 @@
 
+import 'dart:ffi';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -70,7 +71,7 @@ class UtilitiesLearnizer {
     }
   }
 
-  Column buildTextField(TextEditingController controller, TextInputType type, String theme, String name, IconData icon){
+  Column buildTextField(TextEditingController controller, TextInputType type, bool obscureText, String theme, String name, IconData icon, double height, int maxlines){
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -96,10 +97,12 @@ class UtilitiesLearnizer {
                   )
                 ]
             ),
-            height: 60,
+            height: height,
             child: TextField(
               controller: controller,
-              keyboardType: TextInputType.emailAddress,
+              maxLines: maxlines,
+              obscureText: obscureText,
+              keyboardType: type,
               style: const TextStyle(
                   color: Colors.black87
               ),
@@ -144,8 +147,12 @@ class UtilitiesLearnizer {
   }
 
   updateUserData(UserModel user) async {
-    deleteUserData(user);
-    await FirebaseFirestore.instance.collection("userDatabase").add(user.toJson());
+    final CollectionReference userCollection = FirebaseFirestore.instance.collection("userDatabase");
+
+    // Assuming there is a unique identifier for each user, like the user's email
+    final DocumentReference userDocument = userCollection.doc(user.email);
+
+    await userDocument.set(user.toJson());
   }
 
   deleteUserData(UserModel user) async {

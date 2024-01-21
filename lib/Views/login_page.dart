@@ -4,9 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnizer/Business/utilities_learnize.dart';
 import 'package:learnizer/Views/sign_up.dart';
-import 'package:learnizer/Views/Visualize/user_menu.dart';
 
 import '../Models/user_model.dart';
+import 'Visualize/user_menu.dart';
 
 
 class LoginPage extends StatefulWidget {
@@ -16,23 +16,24 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage>{
+class _LoginPageState extends State<LoginPage> {
   final _database = FirebaseFirestore.instance;
   final double coverHeight = 210;
   final double profileHeight = 144;
   UtilitiesLearnizer utilities = UtilitiesLearnizer();
-  String imageUrlLogo='';
-  String imageUrlCover='';
+  String imageUrlLogo = '';
+  String imageUrlCover = '';
   String? errorMessage;
   final RegExp emailRegex = RegExp(
       r'^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$');
   final myControllerEmail = TextEditingController();
   final myControllerPassword = TextEditingController();
+
   // This widget is the root of your application.
   Future<String> getThemeFromUtilities(String file) async {
     String imageUrl = await utilities.getTheme(file);
-      imageUrlLogo = imageUrl;
-      return imageUrl;
+    imageUrlLogo = imageUrl;
+    return imageUrl;
   }
 
   @override
@@ -55,63 +56,63 @@ class _LoginPageState extends State<LoginPage>{
             getThemeFromUtilities("learnizer.png"),
           ]),
           builder: (context, snapshot) {
-              // Render the UI once the image URLs are fetched
-              return Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                      height: double.infinity,
-                      width: double.infinity,
-                      decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Color(0x666CCBCA),
-                                Color(0x996CCBCA),
-                                Color(0xcc6CCBCA),
-                                Color(0xFF6CCBCA),
-                              ]
-                          )
-                      ),
-                      child: SingleChildScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 25,
-                              vertical: 120
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              buildLogoImage(),
-                              const SizedBox(height: 30),
-                              const Text(
-                                'Sign In',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.bold,
-                                ),
+            // Render the UI once the image URLs are fetched
+            return Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                Container(
+                    height: double.infinity,
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Color(0x666CCBCA),
+                              Color(0x996CCBCA),
+                              Color(0xcc6CCBCA),
+                              Color(0xFF6CCBCA),
+                            ]
+                        )
+                    ),
+                    child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 25,
+                            vertical: 120
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            buildLogoImage(),
+                            const SizedBox(height: 30),
+                            const Text(
+                              'Sign In',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 40,
+                                fontWeight: FontWeight.bold,
                               ),
-                              const SizedBox(height: 50),
-                              buildEmail(myControllerEmail),
-                              const SizedBox(height: 20),
-                              buildPassword(myControllerPassword),
-                              buildNoAccountButton(),
-                              if (errorMessage != null)
-                                Text(
-                                  errorMessage!,
-                                  style: const TextStyle(color: Colors.red),
-                                ),
-                              buildLogInBtn(),
-                            ],
-                          )
-                      )
-                  )
-                ],
-              );
-            },
+                            ),
+                            const SizedBox(height: 50),
+                            utilities.buildTextField(myControllerEmail, TextInputType.emailAddress, false, "blue", "Email", Icons.email, 60,1),
+                            const SizedBox(height: 20),
+                            utilities.buildTextField(myControllerPassword, TextInputType.text, true, "blue", "Password", Icons.lock,60,1),
+                            buildNoAccountButton(),
+                            if (errorMessage != null)
+                              Text(
+                                errorMessage!,
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            buildLogInBtn(),
+                          ],
+                        )
+                    )
+                )
+              ],
+            );
+          },
         ),
       ),
     );
@@ -119,141 +120,51 @@ class _LoginPageState extends State<LoginPage>{
 
   buildLogoImage() {
     return CircleAvatar(
-      // ... other properties
-      child: ClipOval(
-        child: Image.network(
-          imageUrlLogo, // Make sure this is a valid URL
-          width: profileHeight,
-          height: profileHeight,
-          fit: BoxFit.cover,
+      radius: profileHeight / 1.8,
+      backgroundColor: Colors.transparent,
+      child: CircleAvatar(
+        radius: profileHeight / 2,
+        backgroundColor: Colors.transparent,
+        child: ClipOval(
+          child: Image.network(
+            imageUrlLogo,
+            // Replace 'assets/learnizer.png' with the correct path
+            width: profileHeight,
+            height: profileHeight,
+            fit: BoxFit.cover,
+          ),
         ),
       ),
     );
   }
 
-  buildEmail(TextEditingController controller){
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Email',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold
-          ),
-        ),
-        const SizedBox(height: 10),
-        Container(
-          alignment: Alignment.centerLeft,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius:  BorderRadius.circular(10),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 6,
-                offset: Offset(0,2)
-              )
-            ]
-          ),
-          height: 60,
-          child: TextField(
-            controller: controller,
-            keyboardType: TextInputType.emailAddress,
-            style: const TextStyle(
-              color: Colors.black87
-            ),
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.only(top: 14),
-              prefixIcon: Icon(
-                Icons.email,
-                color: Color(0xFF6CCBCA)
-              ),
-              hintText: 'Email',
-              hintStyle: TextStyle(
-                color: Colors.black38
-              )
-            ),
-          )
-        )
-      ],
-    );
-  }
-
-  buildPassword(TextEditingController controller){
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Password',
-          style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold
-          ),
-        ),
-        const SizedBox(height: 10),
-        Container(
-            alignment: Alignment.centerLeft,
-            decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius:  BorderRadius.circular(10),
-                boxShadow: const [
-                  BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 6,
-                      offset: Offset(0,2)
-                  )
-                ]
-            ),
-            height: 60,
-            child: TextField(
-              controller: controller,
-             obscureText: true,
-              style: const TextStyle(
-                  color: Colors.black87
-              ),
-              decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.only(top: 14),
-                  prefixIcon: Icon(
-                      Icons.lock,
-                      color: Color(0xFF6CCBCA)
-                  ),
-                  hintText: 'Password',
-                  hintStyle: TextStyle(
-                      color: Colors.black38
-                  )
-              ),
-            )
-        )
-      ],
-    );
-  }
-
   buildNoAccountButton() {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 12.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text("Don't you have an account? ", style: TextStyle(color: CupertinoColors.white,)),
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SignUpPage(),
-                  ),
-                );
-              },
-              child: const Text("Sign Up", style: TextStyle(color: CupertinoColors.white, fontWeight: FontWeight.bold)),
-            ),
-          ],
+    return Container(
+      alignment: Alignment.centerRight,
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 12.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text("Don't you have an account? ", style: TextStyle(
+                color: CupertinoColors.white,)),
+              TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SignUpPage(),
+                      ),
+                    );
+                  },
+                  child: const Text("Sign Up", style: TextStyle(
+                      color: CupertinoColors.white,
+                      fontWeight: FontWeight.bold),)
+              )
+            ],
+          ),
         ),
       ),
     );
@@ -261,35 +172,37 @@ class _LoginPageState extends State<LoginPage>{
 
   buildLogInBtn() {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 25),
-      child: SizedBox(
-        width: double.infinity,
-        child: OutlinedButton(
-          onPressed: () async {
-            if (!emailRegex.hasMatch(myControllerEmail.text)) {
-              setState(() {
-                errorMessage = 'Please provide a valid email';
-              });
-            } else {
-              // Reset errors when the email is entered properly
-              setState(() {
-                errorMessage = null;
-              });
-            }
-
-            // All fields are valid
-            await _signInUser(myControllerEmail, myControllerPassword, context);
-          },
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(width: 2, color: Colors.white),
-            foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 25),
+        child: SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: () {
+              if (
+              !emailRegex.hasMatch(myControllerEmail.text)) {
+                setState(() {
+                  errorMessage = 'Please provide a valid email';
+                });
+              } else {
+                // Reset errors when the email is entered properly
+                setState(() {
+                  errorMessage = null;
+                });
+                _signInUser(myControllerEmail, myControllerPassword, context);
+              }
+            },
+            style: OutlinedButton.styleFrom(
+              // Customize the button style here
+              side: const BorderSide(width: 2, color: Colors.white),
+              foregroundColor: Colors.white, // Text color// Elevation (shadow)
+            ),
+            child: const Text('LOGIN',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold
+                )
+            ),
           ),
-          child: const Text(
-            'LOGIN',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-        ),
-      ),
+        )
     );
   }
 
@@ -298,24 +211,17 @@ class _LoginPageState extends State<LoginPage>{
     final String email = myControllerEmail.text.trim();
     final String password = myControllerPassword.text.trim();
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+     await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: email,
           password: password
       );
-      QuerySnapshot snapshot = await _database.collection("userDatabase").where("Email", isEqualTo: email).get();
-      // Check if there's a document with the given name
-      if (snapshot.docs.isNotEmpty) {
-        DocumentSnapshot documentSnapshot = snapshot.docs.first;
-        UserModel userModel = UserModel.fromSnapshot(documentSnapshot as DocumentSnapshot<Map<String, dynamic>>);
-        // Now you can use the 'user' object
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => UserMenuPage(user: userModel),
-          ),
-        );
-      }
+     UserModel user = UserModel.fromSnapshot(await getDocumentSnapshot(email));
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => UserMenuPage(user: user),
+        ),
+      );
     } on FirebaseAuthException catch (e) {
       if (e.code == 'wrong-password') {
         setState(() {
@@ -339,9 +245,10 @@ class _LoginPageState extends State<LoginPage>{
         errorMessage = 'An unexpected error occurred: $e';
       });
     }
-    myControllerEmail.clear();
-    myControllerPassword.clear();
   }
 
+  getDocumentSnapshot(String email) async {
+    QuerySnapshot querySnapshot = await _database.collection("userDatabase").where("Email",isEqualTo:email).get();
+    return querySnapshot.docs.first as DocumentSnapshot<Map<String,dynamic>>;
+  }
 }
-

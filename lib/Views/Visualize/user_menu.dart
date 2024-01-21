@@ -18,14 +18,13 @@ class UserMenuPage extends StatefulWidget {
 }
 
 class _UserMenuPageState extends State<UserMenuPage> {
-  final _database = FirebaseFirestore.instance;
   final userLoggedIn = FirebaseAuth.instance.currentUser;
   String imageUrlLogo = "";
   final double coverHeight = 210;
   final double profileHeight = 144;
   int myCurrentIndex=0;
   UtilitiesLearnizer utilities = UtilitiesLearnizer();
-  late final UserModel _user = widget.user;
+  late final UserModel _user=widget.user;
   String? errorMessage;
 
   Future<String> getThemeFromUtilities(String file) async {
@@ -35,7 +34,7 @@ class _UserMenuPageState extends State<UserMenuPage> {
   }
 
   @override
-  void initState() {
+  void initState(){
     super.initState();
     // Fetch image URLs and user data when the widget is initialized
     Future.delayed(Duration.zero, () async {
@@ -90,24 +89,23 @@ class _UserMenuPageState extends State<UserMenuPage> {
                         children: [
                           Align(
                             alignment: Alignment.topLeft,
-                            child: ElevatedButton(
-                              onPressed: () { Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => AddDirectoryPage(user: _user),
-                                ),
-                              );},
-                              style: ButtonStyle(
-                                shape: MaterialStateProperty.all(const CircleBorder()),
-                                padding: MaterialStateProperty.all(const EdgeInsets.all(10)),
-                                backgroundColor: MaterialStateProperty.all(utilities.returnColorByTheme(_user.theme)), // <-- Button color
-                                overlayColor: MaterialStateProperty.resolveWith<Color?>((states) {
-                                  if (states.contains(MaterialState.pressed)) return Colors.red;
-                                  return null; // <-- Splash color
-                                }),
+                            child: IconButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AddDirectoryPage(user: _user),
+                                  ),
+                                );
+                              },
+                              icon: Icon(
+                                Icons.add,
+                                color: Colors.white,
+                                weight: 9,
+                                size: 30, // Set the size of the icon to make it bigger
                               ),
-                              child: const Icon(Icons.add),
-                            )),
+                            ),
+                          ),
                           const SizedBox(height: 15),
                           Text(
                             'Welcome ${_user.name}',
@@ -212,7 +210,6 @@ class _UserMenuPageState extends State<UserMenuPage> {
   }
 
   buildFolder(DirectoryModel directory) {
-    int index = _user.directories.indexOf(directory);
     return Container(
       padding: const EdgeInsets.all(2.0),
       margin: const EdgeInsets.all(5),

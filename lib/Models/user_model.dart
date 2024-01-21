@@ -1,5 +1,3 @@
-
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'directory_model.dart';
 
@@ -19,7 +17,7 @@ class UserModel{
   });
 
   toJson(){
-    return{"Email": email, "Name": name, "Directories": directories, "ProfileImage": profileImage, "Theme": theme};
+    return{"Email": email, "Name": name, "Directories": directories.map((directory) => directory.toJson()).toList(), "ProfileImage": profileImage, "Theme": theme};
   }
 
   factory UserModel.fromSnapshot(DocumentSnapshot<Map<String, dynamic>> document) {

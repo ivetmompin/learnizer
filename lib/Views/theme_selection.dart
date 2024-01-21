@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:learnizer/Business/utilities_learnize.dart';
 import 'package:learnizer/Models/directory_model.dart';
 import 'package:learnizer/Models/user_model.dart';
-import 'package:learnizer/Views/Visualize/user_menu.dart';
+
+import 'Visualize/user_menu.dart';
 
 
 class ThemeSelectionPage extends StatefulWidget {
@@ -45,59 +47,59 @@ class _ThemeSelectionPageState extends State<ThemeSelectionPage> {
           future: Future.wait([
           ]),
           builder: (context, snapshot) {
-              // Render the UI once the image URLs are fetched
-              return Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                      height: double.infinity,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: utilities.getCorrectColors(selectedTheme),
-                          )
-                      ),
-                      child: SingleChildScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 25,
-                              vertical: 120
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              buildUserImage(),
-                              const SizedBox(height: 30),
-                              buildUsername(myUsernameController),
-                              const SizedBox(height: 30),
-                              const Text(
-                                'Select Your Theme Color',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
+            // Render the UI once the image URLs are fetched
+            return Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                Container(
+                    height: double.infinity,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: utilities.getCorrectColors(selectedTheme),
+                        )
+                    ),
+                    child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 25,
+                            vertical: 120
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            buildUserImage(),
+                            const SizedBox(height: 30),
+                            buildUsername(myUsernameController),
+                            const SizedBox(height: 30),
+                            const Text(
+                              'Select Your Theme Color',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
                               ),
-                              const SizedBox(height: 10),
-                              buildColorsContainer(),
-                              const SizedBox(height: 20),
-                              buildSelectBtn(),
-                              if (errorMessage != null)
-                                Text(
-                                  errorMessage!,
-                                  style: const TextStyle(color: Colors.red),
-                                ),
-                              // buildLogInBtn(),
-                            ],
-                          )
-                      )
-                  )
-                ],
-              );
-            },
+                            ),
+                            const SizedBox(height: 10),
+                            buildColorsContainer(),
+                            const SizedBox(height: 20),
+                            buildSelectBtn(),
+                            if (errorMessage != null)
+                              Text(
+                                errorMessage!,
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            // buildLogInBtn(),
+                          ],
+                        )
+                    )
+                )
+              ],
+            );
+          },
         ),
       ),
     );
@@ -147,10 +149,10 @@ class _ThemeSelectionPageState extends State<ThemeSelectionPage> {
               )
                   : Container(),
               Positioned(
-                top: profileHeight / 3.3, // Adjust this value to center vertically
-                left: profileHeight / 3.3, // Adjust this value to center horizontally,
+                top: profileHeight / 4, // Adjust this value to center vertically
+                left: profileHeight / 4, // Adjust this value to center horizontally,
                 child: IconButton(
-                  icon: const Icon(Icons.camera_alt),
+                  icon: const Icon(Icons.camera),
                   color: utilities.returnColorByTheme(selectedTheme),
                   onPressed: () async {
                     final imageUrl =
@@ -202,13 +204,13 @@ class _ThemeSelectionPageState extends State<ThemeSelectionPage> {
               ),
               decoration: InputDecoration(
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.only(top: 14),
+                  contentPadding: EdgeInsets.only(top: 14),
                   prefixIcon: Icon(
                       Icons.person,
                       color: utilities.returnColorByTheme(selectedTheme)
                   ),
                   hintText: 'Username',
-                  hintStyle: const TextStyle(
+                  hintStyle: TextStyle(
                       color: Colors.black38
                   )
               ),
@@ -225,13 +227,13 @@ class _ThemeSelectionPageState extends State<ThemeSelectionPage> {
           width: double.infinity,
           child: OutlinedButton(
             onPressed: () async {
-            UserModel user = await _saveUser(imageUrlUser,myUsernameController,selectedTheme,context);
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => UserMenuPage(user: user),
-              ),
-            );
+              UserModel user = await _saveUser(imageUrlUser,myUsernameController,selectedTheme,context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => UserMenuPage(user: user),
+                ),
+              );
             },
             style: OutlinedButton.styleFrom(
               // Customize the button style here
@@ -282,60 +284,60 @@ class _ThemeSelectionPageState extends State<ThemeSelectionPage> {
 
 
   buildColorsContainer() {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 10),
-          Container(
-              alignment: Alignment.centerLeft,
-              height: MediaQuery.of(context).size.width / 1.6,
-              decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius:  BorderRadius.circular(10),
-                  boxShadow: const [
-                    BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 6,
-                        offset: Offset(0,2)
-                    )
-                  ]
-              ),
-              child: GridView.count(
-                crossAxisCount: 3,
-                padding: const EdgeInsets.all(9.0),
-                children: [
-                  getContainerPiece("blue"),
-                  getContainerPiece("green"),
-                  getContainerPiece("yellow"),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 10),
+        Container(
+          alignment: Alignment.centerLeft,
+          height: MediaQuery.of(context).size.width / 1.6,
+          decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius:  BorderRadius.circular(10),
+              boxShadow: const [
+                BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 6,
+                    offset: Offset(0,2)
+                )
+              ]
+          ),
+          child: GridView.count(
+            crossAxisCount: 3,
+            padding: EdgeInsets.all(9.0),
+            children: [
+              getContainerPiece("blue"),
+              getContainerPiece("green"),
+              getContainerPiece("yellow"),
 
-                  getContainerPiece("orange"),
-                  getContainerPiece("pink"),
-                  getContainerPiece("purple")
-                ],
-              ),
-          )
-        ],
-      );
+              getContainerPiece("orange"),
+              getContainerPiece("pink"),
+              getContainerPiece("purple")
+            ],
+          ),
+        )
+      ],
+    );
   }
 
   getContainerPiece(String color) {
     return CircleAvatar(
-        radius: profileHeight/2,
-        backgroundColor: Colors.transparent,
-        child:CircleAvatar(
+      radius: profileHeight/2,
+      backgroundColor: Colors.transparent,
+      child:CircleAvatar(
           radius: profileHeight/3, // Adjust the radius as needed
           backgroundColor: Colors.transparent, // Border color// Make sure the background is transparent
           child: ClipOval(
             child: Container(
-              padding: const EdgeInsets.all(2.0),
+              padding: EdgeInsets.all(2.0),
               height: double.infinity,
               width: double.infinity,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: utilities.getCorrectColors(color),
-                )
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: utilities.getCorrectColors(color),
+                  )
               ),
               child: ElevatedButton(
                 onPressed: () {
@@ -353,7 +355,7 @@ class _ThemeSelectionPageState extends State<ThemeSelectionPage> {
               ),
             ),
           )
-        ),
+      ),
     );
   }
 }

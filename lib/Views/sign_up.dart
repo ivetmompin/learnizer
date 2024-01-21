@@ -62,16 +62,11 @@ class _SignUpPageState extends State<SignUpPage>{
                   Container(
                       height: double.infinity,
                       width: double.infinity,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                           gradient: LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
-                              colors: [
-                                Color(0x666CCBCA),
-                                Color(0x996CCBCA),
-                                Color(0xcc6CCBCA),
-                                Color(0xFF6CCBCA),
-                              ]
+                              colors: utilities.getCorrectColors("blue"),
                           )
                       ),
                       child: SingleChildScrollView(
@@ -94,12 +89,12 @@ class _SignUpPageState extends State<SignUpPage>{
                                 ),
                               ),
                               const SizedBox(height: 30),
-                              buildEmail(myControllerEmail),
+                              utilities.buildTextField(myControllerEmail, TextInputType.emailAddress, false, "blue", "Email", Icons.email,60,1),
                               const SizedBox(height: 20),
-                              buildPassword(myControllerPassword),
+                              utilities.buildTextField(myControllerPassword, TextInputType.text, true, "blue", "Password", Icons.lock,60,1),
                               const SizedBox(height: 20),
-                              buildPasswordConfirmation(
-                                  myControllerConfirmation),
+                              utilities.buildTextField(myControllerConfirmation, TextInputType.text, true, "blue", "Password Confirmation", Icons.verified_user_rounded,60,1),
+                              const SizedBox(height: 20),
                               if (errorMessage != null)
                                 Text(
                                   errorMessage!,
@@ -135,159 +130,6 @@ class _SignUpPageState extends State<SignUpPage>{
           ),
         ),
       ),
-    );
-  }
-
-  buildEmail(TextEditingController controller){
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Email',
-          style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold
-          ),
-        ),
-        const SizedBox(height: 10),
-        Container(
-            alignment: Alignment.centerLeft,
-            decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius:  BorderRadius.circular(10),
-                boxShadow: const [
-                  BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 6,
-                      offset: Offset(0,2)
-                  )
-                ]
-            ),
-            height: 60,
-            child: TextField(
-              controller: controller,
-              keyboardType: TextInputType.emailAddress,
-              style: const TextStyle(
-                  color: Colors.black87
-              ),
-              decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.only(top: 14),
-                  prefixIcon: Icon(
-                      Icons.email,
-                      color: Color(0xFF6CCBCA)
-                  ),
-                  hintText: 'Email',
-                  hintStyle: TextStyle(
-                      color: Colors.black38
-                  )
-              ),
-            )
-        )
-      ],
-    );
-  }
-
-  buildPassword(TextEditingController controller){
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Password',
-          style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold
-          ),
-        ),
-        const SizedBox(height: 10),
-        Container(
-            alignment: Alignment.centerLeft,
-            decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius:  BorderRadius.circular(10),
-                boxShadow: const [
-                  BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 6,
-                      offset: Offset(0,2)
-                  )
-                ]
-            ),
-            height: 60,
-            child: TextField(
-              controller: controller,
-              obscureText: true,
-              style: const TextStyle(
-                  color: Colors.black87
-              ),
-              decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.only(top: 14),
-                  prefixIcon: Icon(
-                      Icons.lock,
-                      color: Color(0xFF6CCBCA)
-                  ),
-                  hintText: 'Password',
-                  hintStyle: TextStyle(
-                      color: Colors.black38
-                  )
-              ),
-            )
-        )
-      ],
-    );
-  }
-
-  buildPasswordConfirmation(TextEditingController controller){
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Confirm Password',
-          style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold
-          ),
-        ),
-        const SizedBox(height: 10),
-        Container(
-            alignment: Alignment.centerLeft,
-            decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius:  BorderRadius.circular(10),
-                boxShadow: const [
-                  BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 6,
-                      offset: Offset(0,2)
-                  )
-                ]
-            ),
-            height: 60,
-            child: TextField(
-              controller: controller,
-              obscureText: true,
-              style: const TextStyle(
-                  color: Colors.black87
-              ),
-              decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.only(top: 14),
-                  prefixIcon: Icon(
-                      Icons.verified_user_rounded,
-                      color: Color(0xFF6CCBCA)
-                  ),
-                  hintText: 'Confirm Password',
-                  hintStyle: TextStyle(
-                      color: Colors.black38
-                  )
-              ),
-            )
-        )
-      ],
     );
   }
 
