@@ -1,10 +1,15 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:learnizer/Business/utilities_learnize.dart';
+import 'package:learnizer/Models/directory_model.dart';
 import 'package:learnizer/Models/task_model.dart';
 import 'package:learnizer/Views/Add/add_task.dart';
 import 'package:learnizer/Views/Visualize/Individual/view_task.dart';
 import '../../../Models/user_model.dart';
+import '../../Edit/edit_task.dart';
+import '../Menus/user_menu.dart';
 
 
 class ViewDirectoryPage extends StatefulWidget {
@@ -21,27 +26,18 @@ class _ViewDirectoryPageState extends State<ViewDirectoryPage>{
   final double profileHeight = 144;
   late final _user = widget.user;
   late final _index = widget.directoryIndex;
-  late final _directory = _user.directories.elementAt(_index);
+  late DirectoryModel _directory = _user.directories.elementAt(_index);
   UtilitiesLearnizer utilities = UtilitiesLearnizer();
   String imageUrlLogo='';
   String imageUrlCover='';
+  final controllerSearch = TextEditingController();
   String? errorMessage;
   // This widget is the root of your application.
-  Future<String> getThemeFromUtilities(String file, String caseImg) async {
-    String imageUrl = await utilities.getTheme(file);
-    if (caseImg == "cover") {
-      imageUrlCover = imageUrl;
-    } else {
-      imageUrlLogo = imageUrl;
-    }
-    return imageUrl;
-  }
 
-  @override
-  void initState() {
-    super.initState();
-    // Fetch image URLs when the widget is initialized
-    getThemeFromUtilities("learnizer.png", "logo");
+  Future<String> getThemeFromUtilities(String file) async {
+    String imageUrl = await utilities.getTheme(file);
+    imageUrlLogo = imageUrl;
+    return imageUrl;
   }
 
   @override
@@ -54,7 +50,7 @@ class _ViewDirectoryPageState extends State<ViewDirectoryPage>{
         body: FutureBuilder(
           // Use FutureBuilder to wait for the image URLs
           future: Future.wait([
-            getThemeFromUtilities("learnizer.png", "logo"),
+            getThemeFromUtilities("learnizer.png"),
           ]),
           builder: (context, snapshot) {
             // Render the UI once the image URLs are fetched
@@ -63,82 +59,75 @@ class _ViewDirectoryPageState extends State<ViewDirectoryPage>{
               alignment: Alignment.center,
               children: [
                 Container(
-                  height: double.infinity,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: utilities.getCorrectColors(_user.theme),
+                    height: double.infinity,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: utilities.getCorrectColors(_user.theme),
+                        )
                     ),
-                  ),
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 15,
-                      vertical: 60,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                          Align(
-                            alignment: Alignment.topLeft,
-                            child: IconButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => AddTaskPage(user: _user, directory: _index),
-                                  ),
-                                );
-                              },
-                              icon: Icon(
-                                Icons.add,
+                    child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 25,
+                            vertical: 60
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children:[
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.arrow_back,
+                                          color: Colors.white,
+                                          weight: 9,
+                                          size: 30, // Set the size of the icon to make it bigger
+                                        ),
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => UserMenuPage(user: _user),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.add,
+                                        color: Colors.white,
+                                        weight: 9,
+                                        size: 30, // Set the size of the icon to make it bigger
+                                      ),
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => AddTaskPage(user: _user,directory: _index,),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                              ]
+                            ),
+                            buildSearchBox(),
+                            Text(
+                              _user.directories.elementAt(_index).name,
+                              style: TextStyle(
                                 color: Colors.white,
-                                weight: 9,
-                                size: 30, // Set the size of the icon to make it bigger
+                                fontSize: 40,
+                                fontWeight: FontWeight.w400,
                               ),
                             ),
-                          ),
-                        const SizedBox(height: 30),
-                        Text(
-                          _directory.name,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 40,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        FutureBuilder<List<TaskModel>>(
-                          future: _getItems(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
-                              return const SizedBox(
-                                height: 25,
-                                child: Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              );
-                            } else if (snapshot.hasError) {
-                              print('Error fetching tasks: ${snapshot.error}');
-                              return Text('Error: ${snapshot.error}');
-                            } else {
-                              if (_directory.tasks.isNotEmpty) {
-                                return ListView.builder(
-                                  itemCount: _directory.tasks.length,
-                                  itemBuilder: (context, index) {
-                                    return _buildTaskItem(_directory.tasks.elementAt(index));
-                                  },
-                                );
-                              } else {
-                                return const Text('No tasks found.');
-                              }
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
+                            const SizedBox(height: 30),
+                            buildTileList()
+                          ],
+                        )
+                    )
                 ),
               ],
             );
@@ -148,68 +137,122 @@ class _ViewDirectoryPageState extends State<ViewDirectoryPage>{
     );
   }
 
-  Future<List<TaskModel>> _getItems() async {
-    return _directory.tasks;
-  }
-
-  _buildTaskItem(TaskModel task) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: utilities.returnColorByTheme(_user.theme),
-            width: 1,
-          ),
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 5),
-      child: ListTile(
-          contentPadding: EdgeInsets.zero,
-          title: Text(
-            task.name,
-            style: const TextStyle(
-              decoration: TextDecoration.none,
-            ),
-          ),
-          subtitle: Text(
-            task.deadline.toString(),
-            style: const TextStyle(
-              decoration: TextDecoration.none,
-            ),
-          ),
-          trailing: const Icon(Icons.navigate_next),
-          onTap: (){
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ViewTaskPage(user: _user, directoryIndex: _index, taskIndex: _directory.tasks.indexOf(task),),
-              ),
-            );
-          }
-      ),
+  Column buildTileList(){
+    List<Widget> tiles = [];
+    if(controllerSearch.text.isNotEmpty) {
+      for (TaskModel task in _user.directories.elementAt(_index).tasks) {
+        if (task.name.contains(controllerSearch.text)) {
+          tiles.add(buildTile(task, _user.directories.elementAt(_index).tasks.indexOf(task)));
+        }
+      }
+    }else{
+      for (TaskModel task in _user.directories.elementAt(_index).tasks) {
+          tiles.add(buildTile(task, _user.directories.elementAt(_index).tasks.indexOf(task)));
+      }
+    }
+    return Column(
+      children: tiles,
     );
   }
 
-  _deleteTask(String name) async {
-    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-        .collection("userDatabase")
-        .where("Name", isEqualTo: _user.name)
-        .get();
-
-    // Check if there's a document with the given name
-    if (querySnapshot.docs.isNotEmpty) {
-      // Get the first document in the result (assuming there's only one match)
-      DocumentSnapshot documentSnapshot = querySnapshot.docs.first;
-      // Delete the document by its ID
-      await FirebaseFirestore.instance.collection("userDatabase").doc(
-          documentSnapshot.id).delete();
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ViewDirectoryPage(user: _user,directoryIndex: _index),
+  buildTile(TaskModel task, int index){
+    return Container(
+        decoration: BoxDecoration(
+          border: Border.all(
+              color: Colors.white,
+              width: 1,
+          ),
+          borderRadius: BorderRadius.circular(16),
         ),
-      );
-    }
+        margin: EdgeInsets.only(bottom: 10),
+        child: ListTile(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ViewTaskPage(user: _user,directoryIndex: _index,taskIndex: index,),
+                ),
+              );
+            },
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+            ),
+            contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+            tileColor: Colors.transparent,
+            leading: Icon(
+                task.isDone ? Icons.check_box : Icons.check_box_outline_blank,
+                color: Colors.white),
+            title: Text(
+              task.name,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.white,
+                decoration: task.isDone? TextDecoration.lineThrough : null,
+              ),
+            ),
+            trailing: Container(
+              padding: EdgeInsets.zero,
+              height: 35,
+              width: 100,
+              child: Row(
+                children:[
+                  IconButton(
+                    color: Colors.white,
+                    iconSize: 18,
+                    icon: Icon(Icons.edit),
+                    onPressed:(){
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EditTaskPage(user: _user,directoryIndex: _index,taskIndex: index,),
+                        ),
+                      );
+                    },
+                  ),
+                  IconButton(
+                    color: Colors.white,
+                    iconSize: 18,
+                    icon: Icon(Icons.delete),
+                    onPressed:(){
+                      setState(() {
+                        int indexTask = _user.directories.elementAt(_index).tasks.indexOf(task);
+                        _user.directories.elementAt(_index).tasks.removeAt(indexTask);
+                        utilities.updateUserData(_user);
+                        });
+                     },
+                  ),
+                ]
+              ),
+            )
+        )
+    );
+  }
+
+  buildSearchBox(){
+    return Container(
+      margin: EdgeInsets.only(top: 20,bottom: 40),
+      padding: EdgeInsets.symmetric(horizontal: 15),
+      decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20)
+      ),
+      child: TextField(
+          controller: controllerSearch,
+          obscureText: false,
+          keyboardType: TextInputType.text,
+          decoration: InputDecoration(
+            contentPadding: EdgeInsets.zero,
+            prefixIcon: Icon(Icons.search,color: utilities.returnColorByTheme(_user.theme), size: 20),
+            prefixIconConstraints: const BoxConstraints(
+              maxHeight: 20,
+              minWidth: 25,
+            ),
+            border: InputBorder.none,
+            hintText: "Search",
+            hintStyle: const TextStyle(color: Colors.grey),
+          )
+      ),
+    );
   }
 
 }

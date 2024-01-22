@@ -6,7 +6,7 @@ import 'package:learnizer/Business/utilities_learnize.dart';
 import 'package:learnizer/Views/sign_up.dart';
 
 import '../Models/user_model.dart';
-import 'Visualize/user_menu.dart';
+import 'Visualize/Menus/user_menu.dart';
 
 
 class LoginPage extends StatefulWidget {
@@ -64,16 +64,11 @@ class _LoginPageState extends State<LoginPage> {
                 Container(
                     height: double.infinity,
                     width: double.infinity,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                         gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
-                            colors: [
-                              Color(0x666CCBCA),
-                              Color(0x996CCBCA),
-                              Color(0xcc6CCBCA),
-                              Color(0xFF6CCBCA),
-                            ]
+                            colors: utilities.getCorrectColors("blue"),
                         )
                     ),
                     child: SingleChildScrollView(

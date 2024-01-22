@@ -2,6 +2,7 @@
 import 'dart:ffi';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -36,6 +37,7 @@ class UtilitiesLearnizer {
   }
 
   Future<String> getTheme(String file) async {
+    print('file: '+file);
     String url='';
     try {
       Reference ref = FirebaseStorage.instance.ref().child('Themes/$file');
@@ -50,24 +52,53 @@ class UtilitiesLearnizer {
 
   Color returnColorByTheme(String? theme){
     switch(theme){
-      case "pink": return const Color(0xffc64b8c);
-      case "purple": return const Color(0xff57026f);
-      case "green": return const Color(0xff3bb143);
-      case "yellow": return const Color(0xffffbf00);
-      case "orange": return const Color(0xffff5f00);
-      default: return const Color(0xff6CCBCA);
+      case "pink": return const Color(0xF9670137);
+      case "purple": return const Color(0xFF57026f);
+      case "green": return const Color(0xFF015407);
+      case "yellow": return const Color(0xFF644B01);
+      case "orange": return const Color(0xFA7A2E01);
+      default: return const Color(0xff018582);
     }
   }
 
 
   List<Color> getCorrectColors(String? selectedTheme) {
     switch(selectedTheme) {
-      case "pink": return [ const Color(0x66c64b8c), const Color(0x99c64b8c), const Color(0xccc64b8c), const Color(0xFFc64b8c)];
-      case "purple": return [ const Color(0x6657026f), const Color(0x9957026f), const Color(0xcc57026f), const Color(0xFF57026f)];
-      case "green": return [const Color(0x663bb143), const Color(0x993bb143), const Color(0xcc3bb143), const Color(0xFF3bb143)];
-      case "yellow": return [const Color(0x66ffbf00), const Color(0x99ffbf00), const Color(0xccffbf00), const Color(0xFFffbf00)];
-      case "orange": return [const Color(0x66ff5f00), const Color(0x99ff5f00), const Color(0xccff5f00), const Color(0xFFff5f00)];
-      default: return [const Color(0x666CCBCA), const Color(0x996CCBCA), const Color(0xcc6CCBCA), const Color(0xFF6CCBCA)];
+      case "pink": return [
+        const Color(0xF9850247),
+        const Color(0xccc64b8c),
+        const Color(0xccc64b8c),
+        const Color(0xF9850247)
+      ];
+      case "purple": return [
+        const Color(0xff57026f),
+        const Color(0x99da63fc),
+        const Color(0x99da63fc),
+        const Color(0xff57026f),
+      ];
+      case "green": return [
+        const Color(0xff015407),
+        const Color(0xcc56e360),
+        const Color(0xcc56e360),
+        const Color(0xff015407),
+      ];
+      case "yellow": return [
+        const Color(0xFF886601),
+        const Color(0xfff6cf59),
+        const Color(0xfff6cf59),
+        const Color(0xFF886601),
+      ];
+      case "orange": return [
+        const Color(0xFAA83F01),
+        const Color(0xfff6823d),
+        const Color(0xfff6823d),
+        const Color(0xFAA83F01),
+      ];
+      default: return [
+        const Color(0xFF006966),
+        const Color(0xcc2ef0f6),
+        const Color(0xcc2ef0f6),
+        const Color(0xFF006966),];
     }
   }
 
@@ -110,8 +141,8 @@ class UtilitiesLearnizer {
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.only(top: 14),
                   prefixIcon: Icon(
-                      icon,
-                      color: returnColorByTheme(theme),
+                    icon,
+                    color: returnColorByTheme(theme),
                   ),
                   hintText: name,
                   hintStyle: TextStyle(
@@ -169,6 +200,10 @@ class UtilitiesLearnizer {
       // Delete the document by its ID
       await FirebaseFirestore.instance.collection("userDatabase").doc(
           documentSnapshot.id).delete();
+      User? user = FirebaseAuth.instance.currentUser;
+      if(user!=null){
+        user.delete();
+      }
     }
   }
 }

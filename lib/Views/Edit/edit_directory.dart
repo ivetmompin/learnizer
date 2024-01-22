@@ -7,40 +7,37 @@ import '../../Models/directory_model.dart';
 import '../../Models/user_model.dart';
 import '../Visualize/Menus/user_menu.dart';
 
-class AddDirectoryPage extends StatefulWidget {
+class EditDirectoryPage extends StatefulWidget {
   final UserModel user;
-  const AddDirectoryPage({required this.user, Key? key}) : super(key: key);
+  final int directoryIndex;
+  const EditDirectoryPage({required this.user, required this.directoryIndex,Key? key}) : super(key: key);
 
   @override
-  State<AddDirectoryPage> createState() => _AddDirectoryPageState();
+  State<EditDirectoryPage> createState() => _EditDirectoryPageState();
 }
 
-class _AddDirectoryPageState extends State<AddDirectoryPage>{
+class _EditDirectoryPageState extends State<EditDirectoryPage>{
   final _database = FirebaseFirestore.instance;
   final double coverHeight = 210;
   final double profileHeight = 144;
   late final _user = widget.user;
+  late final _directoryIndex = widget.directoryIndex;
   UtilitiesLearnizer utilities = UtilitiesLearnizer();
   String imageUrlLogo='';
   String imageUrlDirectory='';
   String? errorMessage;
   final myControllerName = TextEditingController();
+  final myControllerPicture = TextEditingController();
   // This widget is the root of your application.
-  Future<String> getThemeFromUtilities(String file, String caseImg) async {
-    String imageUrl = await utilities.getTheme(file);
-    if (caseImg == "cover") {
-      imageUrlDirectory = imageUrl;
-    } else {
-      imageUrlLogo = imageUrl;
-    }
-    return imageUrl;
+  Future getThemeFromUtilities() async {
+    myControllerName.text=_user.directories.elementAt(_directoryIndex).name;
   }
 
   @override
   void initState() {
     super.initState();
     // Fetch image URLs when the widget is initialized
-    getThemeFromUtilities("learnizer.png", "logo");
+    getThemeFromUtilities();
   }
 
   @override
@@ -54,7 +51,7 @@ class _AddDirectoryPageState extends State<AddDirectoryPage>{
         body: FutureBuilder(
           // Use FutureBuilder to wait for the image URLs
             future: Future.wait([
-              getThemeFromUtilities("learnizer.png", "logo"),
+              getThemeFromUtilities(),
             ]),
             builder: (context, snapshot) {
               // Render the UI once the image URLs are fetched
@@ -67,50 +64,50 @@ class _AddDirectoryPageState extends State<AddDirectoryPage>{
                       width: double.infinity,
                       decoration: BoxDecoration(
                           gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: utilities.getCorrectColors(_user.theme),
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: utilities.getCorrectColors(_user.theme),
                           )
                       ),
                       child: SingleChildScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 25,
-                              vertical: 60
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children:[
-                                    IconButton(
-                                      onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  UserMenuPage(user: _user,),
-                                            ),
-                                          );
-                                        },
-                                      icon: Icon(
-                                        Icons.arrow_back_outlined,
-                                        color: Colors.white,
-                                        weight: 9,
-                                        size: 30, // Set the size of the icon to make it bigger
-                                      ),
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 25,
+                            vertical: 60
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children:[
+                                  IconButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              UserMenuPage(user: _user,),
+                                        ),
+                                      );
+                                    },
+                                    icon: Icon(
+                                      Icons.arrow_back_outlined,
+                                      color: Colors.white,
+                                      weight: 9,
+                                      size: 30, // Set the size of the icon to make it bigger
                                     ),
-                                  ]
-                              ),
-                              const SizedBox(height: 30),
-                              buildUserImage(),
-                              const SizedBox(height: 30),
-                              utilities.buildTextField(myControllerName, TextInputType.text, false,_user.theme, "Name", Icons.edit, 60, 1),
-                              const SizedBox(height: 30),
-                              buildAddDirectoryBtn()
-                            ],
-                          ),
+                                  ),
+                                ]
+                            ),
+                            const SizedBox(height: 30),
+                            buildUserImage(),
+                            const SizedBox(height: 30),
+                            utilities.buildTextField(myControllerName, TextInputType.text, false,_user.theme, "Name", Icons.edit, 60, 1),
+                            const SizedBox(height: 30),
+                            buildAddDirectoryBtn()
+                          ],
+                        ),
                       )
                   ),
                 ],
@@ -128,14 +125,14 @@ class _AddDirectoryPageState extends State<AddDirectoryPage>{
           width: double.infinity,
           child: OutlinedButton(
             onPressed: () {
-                _addDirectory(myControllerName, context);
+              _editDirectory(myControllerName, context);
             },
             style: OutlinedButton.styleFrom(
               // Customize the button style here
               side: const BorderSide(width: 2, color: Colors.white),
               foregroundColor: Colors.white, // Text color// Elevation (shadow)
             ),
-            child: const Text('ADD DIRECTORY',
+            child: const Text('EDIT DIRECTORY',
                 style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold
@@ -147,6 +144,9 @@ class _AddDirectoryPageState extends State<AddDirectoryPage>{
   }
 
   buildUserImage() {
+    if(imageUrlDirectory.isEmpty){
+      imageUrlDirectory=_user.directories.elementAt(_directoryIndex).image;
+    }
     return CircleAvatar(
       radius: profileHeight / 1.8,
       backgroundColor: Colors.white,
@@ -185,31 +185,32 @@ class _AddDirectoryPageState extends State<AddDirectoryPage>{
     );
   }
 
-_addDirectory(TextEditingController myControllerName, context) async {
-  final String name = myControllerName.text.trim();
-  final List<TaskModel> tasks = [];
-  if(imageUrlDirectory.isEmpty){
-    imageUrlDirectory=await utilities.getTheme("${_user.theme}.jpg");
-  }
-  if (errorMessage == null) {
-    try {
-      DirectoryModel directoryModel = DirectoryModel(name: name, image: imageUrlDirectory, tasks:tasks);
-      _user.directories.add(directoryModel);
-      utilities.updateUserData(_user);
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => UserMenuPage(user: _user),
-        ),
-      );
-    } catch (e) {
-      setState(() {
-        errorMessage = 'An error occurred: $e';
-      });
+  _editDirectory(TextEditingController myControllerName, context) async {
+    final String name = myControllerName.text.trim();
+    final List<TaskModel> tasks = [];
+    if(imageUrlDirectory.isEmpty){
+      imageUrlDirectory=_user.directories.elementAt(_directoryIndex).image;
     }
+    if (errorMessage == null) {
+      try {
+        DirectoryModel directoryModel = DirectoryModel(name: name, image: imageUrlDirectory, tasks:tasks);
+        _user.directories.removeAt(_directoryIndex);
+        _user.directories.add(directoryModel);
+        utilities.updateUserData(_user);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => UserMenuPage(user: _user),
+          ),
+        );
+      } catch (e) {
+        setState(() {
+          errorMessage = 'An error occurred: $e';
+        });
+      }
+    }
+    myControllerName.clear();
   }
-  myControllerName.clear();
-}
 
 }
 

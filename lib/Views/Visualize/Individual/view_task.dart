@@ -1,7 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:learnizer/Business/utilities_learnize.dart';
 import 'package:learnizer/Views/Add/add_task.dart';
+import 'package:learnizer/Views/Visualize/Individual/view_directory.dart';
+import 'package:learnizer/services/search_youtube.dart';
 import '../../../Models/user_model.dart';
 
 
@@ -20,6 +23,8 @@ class _ViewTaskPageState extends State<ViewTaskPage>{
   final double coverHeight = 210;
   final double profileHeight = 144;
   late final _user = widget.user;
+  late final _directoryIndex = widget.directoryIndex;
+  late final _taskIndex = widget.taskIndex;
   UtilitiesLearnizer utilities = UtilitiesLearnizer();
   String imageUrlLogo='';
   String imageUrlCover='';
@@ -74,21 +79,72 @@ class _ViewTaskPageState extends State<ViewTaskPage>{
                           physics: const AlwaysScrollableScrollPhysics(),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 25,
-                              vertical: 120
+                              vertical: 60
                           ),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              buildLogoImage(),
+                              Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children:[
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.arrow_back,
+                                        color: Colors.white,
+                                        weight: 9,
+                                        size: 30, // Set the size of the icon to make it bigger
+                                      ),
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => ViewDirectoryPage(user: _user,directoryIndex: _directoryIndex,),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.question_mark,
+                                        color: Colors.white,
+                                        weight: 9,
+                                        size: 30, // Set the size of the icon to make it bigger
+                                      ),
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => SearchPage(user: _user, directoryIndex: _directoryIndex,taskIndex: _taskIndex),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ]
+                              ),
                               const SizedBox(height: 30),
-                              const Text(
-                                'Sign Up',
+                              Text(
+                                _user.directories.elementAt(_directoryIndex).tasks.elementAt(_taskIndex).name,
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 40,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                              const SizedBox(height:40),
+                              buildDeadline(),
+                              buildDescription(),
+                              const SizedBox(height: 50),
+                              Text(
+                                "Your Attachments",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
+                              const SizedBox(height: 30),
+                              for(int i=0;i<_user.directories.elementAt(_directoryIndex).tasks.elementAt(_taskIndex).attachments.length;i++)
+                                buildTile(_user.directories.elementAt(_directoryIndex).tasks.elementAt(_taskIndex).attachments.elementAt(i),i)
                             ],
                           )
                       )
@@ -101,40 +157,113 @@ class _ViewTaskPageState extends State<ViewTaskPage>{
     );
   }
 
-  buildLogoImage(){
-    getThemeFromUtilities("learnizer.png","logo");
-    return CircleAvatar(
-      radius: profileHeight/1.8,
-      backgroundColor: Colors.transparent,
-      child:CircleAvatar(
-        radius: profileHeight/2, // Adjust the radius as needed
-        backgroundColor: Colors.transparent, // Border color// Make sure the background is transparent
-        child: ClipOval(
-          child: Image.network(
-            imageUrlLogo,
-            width: profileHeight, // Adjust the width as needed
-            height: profileHeight, // Adjust the height as needed
-            fit: BoxFit.cover, // Make sure the image covers the circular boundary
+  buildDeadline(){
+    return Column(
+      children:[
+         Container(
+            margin: EdgeInsets.only(top: 20,bottom: 40,left:70,right: 70),
+            padding: EdgeInsets.symmetric(horizontal: 15),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              children:[
+                Icon(
+                  Icons.alarm_on_outlined,
+                  color: utilities.returnColorByTheme(_user.theme),
+                  size:15
+                ),
+                Text(
+                  _user.directories.elementAt(_directoryIndex).tasks.elementAt(_taskIndex).deadline.toString(),
+                  style: TextStyle(
+                    color: utilities.returnColorByTheme(_user.theme),
+                    fontSize: 15
+                  )
+                )
+              ]
+            )
+          )
+      ]
+    );
+  }
+  buildTile(String attachment, int index){
+    return Container(
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Colors.white,
+            width: 1,
           ),
+          borderRadius: BorderRadius.circular(16),
         ),
-      ),
+        margin: EdgeInsets.only(bottom: 10),
+        child: ListTile(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+            tileColor: Colors.transparent,
+            leading: CachedNetworkImage(
+              imageUrl: attachment,
+              width: 30,height: 30,
+            ),
+            title: Text(
+              "Image ${index}",
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.white,
+              ),
+            ),
+            trailing: Container(
+              padding: EdgeInsets.zero,
+              height: 35,
+              width: 60,
+              child: Row(
+                  children:[
+                    IconButton(
+                      color: Colors.white,
+                      iconSize: 18,
+                      icon: Icon(Icons.delete),
+                      onPressed:(){
+                        setState(() {
+                          _user.directories.elementAt(_directoryIndex).tasks.removeAt(_taskIndex).attachments.removeAt(index);
+                          utilities.updateUserData(_user);
+                        });
+                      },
+                    ),
+                  ]
+              ),
+            )
+        )
     );
   }
 
-  _deleteTask(String name) async {
-    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-        .collection("userDatabase")
-        .where("Name", isEqualTo: _user.name)
-        .get();
+  buildDescription() {
+    return Column(
+      children:[
+        Text(
+          "Description",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          _user.directories.elementAt(_directoryIndex).tasks.elementAt(_taskIndex).description,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+      ]
+    );
+  }
 
-    // Check if there's a document with the given name
-    if (querySnapshot.docs.isNotEmpty) {
-      // Get the first document in the result (assuming there's only one match)
-      DocumentSnapshot documentSnapshot = querySnapshot.docs.first;
-      // Delete the document by its ID
-      await FirebaseFirestore.instance.collection("userDatabase").doc(
-          documentSnapshot.id).delete();
-    }
+  buildDeadLine() {
+
   }
 
 }

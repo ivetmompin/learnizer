@@ -5,33 +5,32 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnizer/Business/utilities_learnize.dart';
-import 'package:learnizer/Models/directory_model.dart';
+import 'package:learnizer/Views/Add/add_attachments.dart';
 import 'package:learnizer/Views/Visualize/Individual/view_directory.dart';
-import 'package:learnizer/Views/Visualize/Menus/user_menu.dart';
 
 import '../../Models/task_model.dart';
 import '../../Models/user_model.dart';
 import 'package:intl/intl.dart';
 
-import 'add_attachments.dart';
 
 
-
-class AddTaskPage extends StatefulWidget {
+class EditTaskPage extends StatefulWidget {
   final UserModel user;
-  final int directory;
-  const AddTaskPage({required this.user,required this.directory, Key? key}) : super(key: key);
+  final int directoryIndex;
+  final int taskIndex;
+  const EditTaskPage({required this.user,required this.directoryIndex, required this.taskIndex, Key? key}) : super(key: key);
 
   @override
-  State<AddTaskPage> createState() => _AddTaskPageState();
+  State<EditTaskPage> createState() => _EditTaskPageState();
 }
 
-class _AddTaskPageState extends State<AddTaskPage>{
+class _EditTaskPageState extends State<EditTaskPage>{
   final _database = FirebaseFirestore.instance;
   final double coverHeight = 210;
   final double profileHeight = 144;
   late final _user = widget.user;
-  late final _directory = widget.directory;
+  late final _directoryIndex = widget.directoryIndex;
+  late final _taskIndex = widget.taskIndex;
   String textDirectory = '';
   UtilitiesLearnizer utilities = UtilitiesLearnizer();
   String imageUrlLogo='';
@@ -41,21 +40,18 @@ class _AddTaskPageState extends State<AddTaskPage>{
   final myControllerDeadline = TextEditingController();
   final myControllerDescription = TextEditingController();
   // This widget is the root of your application.
-  Future<String> getThemeFromUtilities(String file, String caseImg) async {
-    String imageUrl = await utilities.getTheme(file);
-    if (caseImg == "cover") {
-      imageUrlTask = imageUrl;
-    } else {
-      imageUrlLogo = imageUrl;
-    }
-    return imageUrl;
+  Future updateFields() async {
+    myControllerName.text =_user.directories.elementAt(_directoryIndex).tasks.elementAt(_taskIndex).name;
+    DateTime deadline =_user.directories.elementAt(_directoryIndex).tasks.elementAt(_taskIndex).deadline;
+    DateFormat format = DateFormat("dd/MM/yyyy");
+    myControllerDeadline.text = format.format(deadline).toString();
+    myControllerDescription.text =_user.directories.elementAt(_directoryIndex).tasks.elementAt(_taskIndex).description;
   }
 
   @override
   void initState() {
     super.initState();
     // Fetch image URLs when the widget is initialized
-    getThemeFromUtilities("learnizer.png", "logo");
   }
 
   @override
@@ -68,7 +64,7 @@ class _AddTaskPageState extends State<AddTaskPage>{
         body: FutureBuilder(
           // Use FutureBuilder to wait for the image URLs
             future: Future.wait([
-              getThemeFromUtilities("learnizer.png", "logo"),
+              updateFields()
             ]),
             builder: (context, snapshot) {
               // Render the UI once the image URLs are fetched
@@ -98,27 +94,43 @@ class _AddTaskPageState extends State<AddTaskPage>{
                               Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children:[
-                                      IconButton(
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => ViewDirectoryPage(user: _user,directoryIndex: _directory),
-                                            ),
-                                          );
-                                        },
-                                        icon: Icon(
-                                          Icons.arrow_back_outlined,
-                                          color: Colors.white,
-                                          weight: 9,
-                                          size: 30, // Set the size of the icon to make it bigger
-                                        ),
+                                    IconButton(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => ViewDirectoryPage(user: _user,directoryIndex: _directoryIndex),
+                                          ),
+                                        );
+                                      },
+                                      icon: Icon(
+                                        Icons.arrow_back_outlined,
+                                        color: Colors.white,
+                                        weight: 9,
+                                        size: 30, // Set the size of the icon to make it bigger
                                       ),
-                                    ],
+                                    ),
+                                    IconButton(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => AddAttachmentsPage(user: _user,directoryIndex: _directoryIndex,taskIndex: _taskIndex,origin: "edit",),
+                                          ),
+                                        );
+                                      },
+                                      icon: Icon(
+                                        Icons.photo_filter,
+                                        color: Colors.white,
+                                        weight: 9,
+                                        size: 30, // Set the size of the icon to make it bigger
+                                      ),
+                                    ),
+                                  ],
                               ),
                               const SizedBox(height: 10),
                               const Text(
-                                'Add Task',
+                                'Edit Task',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 40,
@@ -136,7 +148,7 @@ class _AddTaskPageState extends State<AddTaskPage>{
                                   errorMessage!,
                                   style: const TextStyle(color: Colors.red),
                                 ),
-                              buildAddTaskBtn()
+                              buildEditTaskBtn()
                             ],
                           )
                       )
@@ -151,7 +163,6 @@ class _AddTaskPageState extends State<AddTaskPage>{
   }
 
   buildLogoImage(){
-    getThemeFromUtilities("learnizer.png","logo");
     return CircleAvatar(
       radius: profileHeight/1.8,
       backgroundColor: Colors.transparent,
@@ -209,21 +220,21 @@ class _AddTaskPageState extends State<AddTaskPage>{
       ),
     );
   }
-  buildAddTaskBtn() {
+  buildEditTaskBtn() {
     return Container(
         padding: const EdgeInsets.symmetric(vertical: 25),
         child: SizedBox(
           width: double.infinity,
           child: OutlinedButton(
             onPressed: () {
-                _addTask(myControllerName, myControllerDescription, myControllerDeadline,context);
-              },
+              _editTask(myControllerName, myControllerDescription, myControllerDeadline,context);
+            },
             style: OutlinedButton.styleFrom(
               // Customize the button style here
               side: const BorderSide(width: 2, color: Colors.white),
               foregroundColor: Colors.white, // Text color// Elevation (shadow)
             ),
-            child: const Text('ADD TASK',
+            child: const Text('EDIT TASK',
                 style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold
@@ -234,7 +245,7 @@ class _AddTaskPageState extends State<AddTaskPage>{
     );
   }
 
-  _addTask(TextEditingController myControllerName, TextEditingController myControllerDescription, TextEditingController myControllerDeadline, context) async {
+  _editTask(TextEditingController myControllerName, TextEditingController myControllerDescription, TextEditingController myControllerDeadline, context) async {
     final String name = myControllerName.text.trim();
     final String description = myControllerDescription.text.trim();
     final String deadline = myControllerDeadline.text.trim();
@@ -244,12 +255,13 @@ class _AddTaskPageState extends State<AddTaskPage>{
     if (errorMessage == null) {
       try {
         TaskModel task = TaskModel(name: name, description: description, deadline: deadlineDate,isDone:false,attachments: []);
-        _user.directories.elementAt(_directory).tasks.add(task);
+        _user.directories.elementAt(_directoryIndex).tasks.removeAt(_taskIndex);
+        _user.directories.elementAt(_directoryIndex).tasks.add(task);
         utilities.updateUserData(_user);
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => AddAttachmentsPage(user: _user,directoryIndex: _directory,taskIndex: _user.directories.elementAt(_directory).tasks.indexOf(task),origin: "add",),
+            builder: (context) => ViewDirectoryPage(user: _user,directoryIndex: _directoryIndex),
           ),
         );
       } on FirebaseAuthException catch (e) {

@@ -5,7 +5,7 @@ import 'package:learnizer/Business/utilities_learnize.dart';
 import 'package:learnizer/Models/directory_model.dart';
 import 'package:learnizer/Models/user_model.dart';
 
-import 'Visualize/user_menu.dart';
+import 'Visualize/Menus/user_menu.dart';
 
 
 class ThemeSelectionPage extends StatefulWidget {
@@ -149,14 +149,14 @@ class _ThemeSelectionPageState extends State<ThemeSelectionPage> {
               )
                   : Container(),
               Positioned(
-                top: profileHeight / 4, // Adjust this value to center vertically
-                left: profileHeight / 4, // Adjust this value to center horizontally,
+                top: profileHeight / 3.3, // Adjust this value to center vertically
+                left: profileHeight / 3.3,  // Adjust this value to center horizontally,
                 child: IconButton(
-                  icon: const Icon(Icons.camera),
+                  icon: const Icon(Icons.camera_alt),
                   color: utilities.returnColorByTheme(selectedTheme),
                   onPressed: () async {
                     final imageUrl =
-                    await utilities.pickImageFromGalleryOrCamera("camera");
+                    await utilities.pickImageFromGalleryOrCamera("gallery");
                     setState(() {
                       imageUrlUser = imageUrl.toString();
                     });
@@ -253,13 +253,16 @@ class _ThemeSelectionPageState extends State<ThemeSelectionPage> {
 
   Future<UserModel> _saveUser(String imageUrlUser, TextEditingController myNameController, String theme, context) async {
     try {
-      if(imageUrlUser.isEmpty){
-        imageUrlUser=await utilities.getTheme("profile.png");
+      if (imageUrlUser.isEmpty) {
+        imageUrlUser = await utilities.getTheme("profile.png");
       }
+
       String name = myNameController.text.trim();
       List<DirectoryModel> directories = [];
       UserModel userModel = UserModel(email: userEmail, name: name, directories: directories, profileImage: imageUrlUser, theme: selectedTheme);
-      await _database.collection("userDatabase").add(userModel.toJson());
+
+      // Use the user's email as the document ID
+      await _database.collection("userDatabase").doc(userEmail).set(userModel.toJson());
 
       // Clear text fields after successful addition
       ScaffoldMessenger.of(context).showSnackBar(
